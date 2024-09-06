@@ -11,6 +11,9 @@ export class Post extends Document {
     @Prop({ required: true })
     content: string;
 
+    @Prop({ required: true })
+    status: string;
+
     @Prop({ type: [MongooseSchema.Types.ObjectId], default: [] })
     like_user_id: Types.ObjectId[];
 

@@ -14,6 +14,7 @@ export class PostService {
     ) { }
 
     async createPost(createPostDto: CreatePostDto): Promise<Post> {
+        createPostDto.status = "Pending"
         const newPost = new this.postModel(createPostDto);
         return newPost.save();
     }
@@ -60,6 +61,14 @@ export class PostService {
 
     async updatePost(postId: string, updatePostDto: UpdatePostDto): Promise<Post> {
         const updatedPost = await this.postModel.findByIdAndUpdate(postId, updatePostDto, { new: true }).exec();
+        if (!updatedPost) {
+            throw new NotFoundException('Post not found');
+        }
+        return updatedPost;
+    }
+
+    async approvePost(postId: string): Promise<Post> {
+        const updatedPost = await this.postModel.findByIdAndUpdate(postId, { status: "Approved" }, { new: true }).exec();
         if (!updatedPost) {
             throw new NotFoundException('Post not found');
         }

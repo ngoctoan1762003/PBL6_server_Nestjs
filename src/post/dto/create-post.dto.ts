@@ -3,4 +3,5 @@ export class CreatePostDto {
     readonly content: string;
     readonly group_id?: string;
     readonly tag?: string[];
+    status?: string;
 }

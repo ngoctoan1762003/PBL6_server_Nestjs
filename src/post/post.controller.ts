@@ -32,6 +32,11 @@ export class PostController {
         return this.postService.updatePost(postId, updatePostDto);
     }
 
+    @Put('/approve/:id')
+    async approvePost(@Param('id') postId: string, @Body() updatePostDto: UpdatePostDto) {
+        return this.postService.approvePost(postId);
+    }
+
     @Delete(':id')
     async deletePost(@Param('id') postId: string) {
         return this.postService.deletePost(postId);
