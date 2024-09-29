@@ -95,6 +95,10 @@ export class AccountService {
         return { accessToken };
     }
 
+    async findByIds(userIds: string[]): Promise<User[]> {
+        return this.accountModel.find({ _id: { $in: userIds } }).exec();
+    }
+
     async forgotPassword(email: string): Promise<{ message: string }> {
         // Check if the email exists in the database
         const user = await this.accountModel.findOne({ email });

@@ -6,6 +6,8 @@ import { Comment } from 'src/comment/comment.schema';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { UserPostShare } from 'src/user_post_share/user_post_share.interface';
+import { AccountService } from 'src/account/account.service';
+import { User } from 'src/account/account.schema';
 
 @Injectable()
 export class PostService {
@@ -13,6 +15,7 @@ export class PostService {
         @InjectModel(Post.name) private postModel: Model<Post>,
         @InjectModel(Comment.name) private commentModel: Model<Comment>,
         @InjectModel('UserPostShare') private readonly userPostShareModel: Model<UserPostShare>,
+        private accountService: AccountService,  // Inject AccountService
     ) { }
 
     async createPost(createPostDto: CreatePostDto): Promise<Post> {
@@ -21,10 +24,35 @@ export class PostService {
         return newPost.save();
     }
 
-    async getAllPosts(): Promise<Post[]> {
-        return this.postModel.find().exec();
+    async getAllPosts(): Promise<any[]> {
+        const posts = await this.postModel.find().exec();
+    
+        const allPosts = await Promise.all(posts.map(async (post) => {
+            const likeUserIds = post.like_user_id.map(id => id.toString());
+            const dislikeUserIds = post.dislike_user_id.map(id => id.toString());
+    
+            const likeUsers = await this.getUsersByIds(likeUserIds); 
+            const dislikeUsers = await this.getUsersByIds(dislikeUserIds); 
+    
+            return {
+                ...post.toObject(),
+                like_user_info: likeUsers.map(user => ({
+                    _id: user._id,
+                    username: user.username,
+                    image: user.image,
+                })),
+                dislike_user_info: dislikeUsers.map(user => ({
+                    _id: user._id,
+                    username: user.username,
+                    image: user.image,
+                })),
+            };
+        }));
+    
+        allPosts.sort((a, b) => new Date(b.created_time).getTime() - new Date(a.created_time).getTime());
+        return allPosts;
     }
-
+    
     async getPostById(postId: string): Promise<Post> {
         const post = await this.postModel.findById(postId).exec();
         if (!post) {
@@ -68,6 +96,10 @@ export class PostService {
         allPosts.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
 
         return allPosts;
+    }
+
+    private async getUsersByIds(userIds: string[]): Promise<User[]> {
+        return this.accountService.findByIds(userIds);
     }
 
     async updatePost(postId: string, updatePostDto: UpdatePostDto): Promise<Post> {

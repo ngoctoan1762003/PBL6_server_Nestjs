@@ -34,6 +34,9 @@ export class Post extends Document {
 
     @Prop({ type: Date })
     updated_time: Date;  // Explicitly define updatedAt
+
+    @Prop({ type: [String], default: [] })
+    photo: string[];
 }
 
 export const PostSchema = SchemaFactory.createForClass(Post);
