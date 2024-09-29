@@ -2,12 +2,14 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Comment } from './comment.schema';
+import { Post } from 'src/post/post.schema';
 import { CreateCommentDto } from './dto/comment.dto';
 
 @Injectable()
 export class CommentService {
   constructor(
     @InjectModel(Comment.name) private commentModel: Model<Comment>,
+    @InjectModel(Post.name) private postModel: Model<Post>,  // Inject the Post model
   ) { }
 
   // CommentService.createComment example
@@ -23,7 +25,20 @@ export class CommentService {
       parent_comment_id: validParentCommentId,
     });
 
-    return await newComment.save();
+    const savedComment = await newComment.save();
+
+    const updatedPost = await this.postModel.findByIdAndUpdate(
+      post_id,
+      { $push: { comment_id: savedComment._id } },  // Push the new comment ID
+      { new: true }
+    ).exec();
+
+    // Check if the post was found and updated
+    if (!updatedPost) {
+      throw new NotFoundException('Post not found');
+    }
+
+    return savedComment;
   }
 
   async getAllCommentsByPostId(postId: string): Promise<Comment[]> {

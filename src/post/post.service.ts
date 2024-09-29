@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Post } from './post.schema';
+import { Comment } from 'src/comment/comment.schema';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { UserPostShare } from 'src/user_post_share/user_post_share.interface';
@@ -10,6 +11,7 @@ import { UserPostShare } from 'src/user_post_share/user_post_share.interface';
 export class PostService {
     constructor(
         @InjectModel(Post.name) private postModel: Model<Post>,
+        @InjectModel(Comment.name) private commentModel: Model<Comment>,
         @InjectModel('UserPostShare') private readonly userPostShareModel: Model<UserPostShare>,
     ) { }
 
@@ -49,10 +51,19 @@ export class PostService {
             }),
         );
 
-        const allPosts = [
-            ...userPosts.map((post) => ({ user_id: post.user_id, content: post.content, like_user_id: post.like_user_id, dislike_user_id: post.dislike_user_id, comment_id: post.comment_id, tag: post.tag, group_id: post.group_id, time: post.created_time })),
-            ...sharedPosts.map((post) => ({ user_id: post.user_id, content: post.content, like_user_id: post.like_user_id, dislike_user_id: post.dislike_user_id, comment_id: post.comment_id, tag: post.tag, group_id: post.group_id, time: post.shared_time }))
-        ];
+        let allPosts = [];
+
+        if (sharedPosts != null){
+            allPosts = [
+                ...userPosts.map((post) => ({ user_id: post.user_id, content: post.content, like_user_id: post.like_user_id, dislike_user_id: post.dislike_user_id, comment_id: post.comment_id, tag: post.tag, group_id: post.group_id, time: post.created_time })),
+                ...sharedPosts.map((post) => ({ user_id: post.user_id, content: post.content, like_user_id: post.like_user_id, dislike_user_id: post.dislike_user_id, comment_id: post.comment_id, tag: post.tag, group_id: post.group_id, time: post.shared_time }))
+            ];
+        }
+        else{
+            allPosts = [
+                ...userPosts.map((post) => ({ user_id: post.user_id, content: post.content, like_user_id: post.like_user_id, dislike_user_id: post.dislike_user_id, comment_id: post.comment_id, tag: post.tag, group_id: post.group_id, time: post.created_time })),
+            ];
+        }
 
         allPosts.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
 
@@ -76,12 +87,27 @@ export class PostService {
     }
 
     async deletePost(postId: string): Promise<{ message: string }> {
+        // Check if the post exists
+        const post = await this.postModel.findById(postId).exec();
+        if (!post) {
+            throw new NotFoundException('Post not found');
+        }
+    
+        // Delete all comments associated with the post
+        await this.commentModel.deleteMany({ post_id: postId }).exec();
+    
+        // Delete all user_post_shares associated with the post
+        await this.userPostShareModel.deleteMany({ post_id: postId }).exec();
+    
         const result = await this.postModel.findByIdAndDelete(postId).exec();
+    
         if (!result) {
             throw new NotFoundException('Post not found');
         }
-        return { message: 'Post deleted successfully' };
+    
+        return { message: 'Post and related data deleted successfully' };
     }
+    
 
     async likePost(postId: string, userId: string): Promise<Post> {
         const post = await this.postModel.findById(postId).exec();
