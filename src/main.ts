@@ -4,8 +4,9 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // Enable CORS from all sources
   app.enableCors({
-    origin: 'https://pbl6-server-nestjs.onrender.com', // Hoặc dùng '*' để cho phép tất cả domain
+    origin: '*',  // Cho phép tất cả nguồn
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,  // Nếu bạn muốn cho phép cookie, thông tin xác thực
   });
