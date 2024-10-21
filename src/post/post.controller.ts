@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Controller, Get, Post, Put, Delete, Body, Param } from '@nestjs/common';
 import { PostService } from './post.service';
 import { CreatePostDto } from './dto/create-post.dto';
@@ -33,7 +34,7 @@ export class PostController {
     }
 
     @Put('/approve/:id')
-    async approvePost(@Param('id') postId: string, @Body() updatePostDto: UpdatePostDto) {
+    async approvePost(@Param('id') postId: string) {
         return this.postService.approvePost(postId);
     }
 

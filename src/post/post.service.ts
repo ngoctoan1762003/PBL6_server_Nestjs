@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -30,7 +31,8 @@ export class PostService {
         const allPosts = await Promise.all(posts.map(async (post) => {
             const likeUserIds = post.like_user_id.map(id => id.toString());
             const dislikeUserIds = post.dislike_user_id.map(id => id.toString());
-    
+            
+            // const name = await this.getUsersByIds();
             const likeUsers = await this.getUsersByIds(likeUserIds); 
             const dislikeUsers = await this.getUsersByIds(dislikeUserIds); 
     

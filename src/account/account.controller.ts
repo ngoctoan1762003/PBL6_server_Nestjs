@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Controller, Get, Post, Body, Delete, Param, Put, UseGuards, Headers } from '@nestjs/common';
 import { AccountService } from './account.service';
 import { User } from './account.schema';
@@ -8,7 +9,7 @@ import { AdminAuthGuard } from 'src/guard/admin_auth.guard';
 
 @Controller('account')
 export class AccountController {
-    constructor(private accountService: AccountService){}
+    constructor(private accountService: AccountService){} 
 
     @Get()
     @UseGuards(AdminAuthGuard)

@@ -1,10 +1,11 @@
+/* eslint-disable prettier/prettier */
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AccountService } from './account.service';
 import { AccountController } from './account.controller';
 import { User, UserSchema } from './account.schema';
 import { JwtModule } from '@nestjs/jwt';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config'; 
 
 @Module({
     imports: [

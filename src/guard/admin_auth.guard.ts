@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { JwtAuthGuard } from './jwt-auth.guard';  // Import the base JwtAuthGuard
 import { Reflector } from '@nestjs/core';

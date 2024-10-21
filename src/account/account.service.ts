@@ -1,5 +1,6 @@
+/* eslint-disable prettier/prettier */
 import { SignupDto } from './dto/signup.dto';
-import { Injectable, ConflictException, HttpStatus, HttpException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, HttpStatus, HttpException, UnauthorizedException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from './account.schema';
 import mongoose from 'mongoose';
@@ -8,7 +9,7 @@ import { LoginDto } from './dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
 import * as crypto from 'crypto'; // To generate a secure token
 import * as nodemailer from 'nodemailer'; // For sending emails
-
+ 
 @Injectable()
 export class AccountService {
     constructor(
@@ -71,7 +72,7 @@ export class AccountService {
         return { message: 'User successfully deleted' };
     }
 
-    async login(loginDto: LoginDto): Promise<{ accessToken: string }> {
+    async login(loginDto: LoginDto): Promise<{ userName: string, userId: any, accessToken: string }> {
         const { email, password } = loginDto;
 
         // Find the user by email
@@ -88,11 +89,12 @@ export class AccountService {
 
         // Create a payload with the user's data
         const payload = { username: user.username, role: user.role, email: user.email };
-
+        
         // Sign the JWT token
         const accessToken = this.jwtService.sign(payload);
-
-        return { accessToken };
+        const userName = user.username;
+        const userId = user._id;
+        return { userName, userId, accessToken };
     }
 
     async findByIds(userIds: string[]): Promise<User[]> {
