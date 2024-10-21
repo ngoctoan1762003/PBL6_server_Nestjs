@@ -71,7 +71,7 @@ export class AccountService {
         return { message: 'User successfully deleted' };
     }
 
-    async login(loginDto: LoginDto): Promise<{ accessToken: string }> {
+    async login(loginDto: LoginDto): Promise<{ userId: string, userName: string, accessToken: string }> {
         const { email, password } = loginDto;
 
         // Find the user by email
@@ -92,7 +92,7 @@ export class AccountService {
         // Sign the JWT token
         const accessToken = this.jwtService.sign(payload);
 
-        return { accessToken };
+        return { userId: user._id.toString(), userName: user.username, accessToken };
     }
 
     async findByIds(userIds: string[]): Promise<User[]> {
