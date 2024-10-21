@@ -72,6 +72,7 @@ export class AccountService {
         return { message: 'User successfully deleted' };
     }
 
+
     async login(loginDto: LoginDto): Promise<{ userName: string, userId: any, accessToken: string }> {
         const { email, password } = loginDto;
 
@@ -92,6 +93,8 @@ export class AccountService {
         
         // Sign the JWT token
         const accessToken = this.jwtService.sign(payload);
+
+        return { userId: user._id.toString(), userName: user.username, accessToken };
         const userName = user.username;
         const userId = user._id;
         return { userName, userId, accessToken };

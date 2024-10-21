@@ -27,17 +27,23 @@ export class PostService {
 
     async getAllPosts(): Promise<any[]> {
         const posts = await this.postModel.find().exec();
-    
+        
         const allPosts = await Promise.all(posts.map(async (post) => {
             const likeUserIds = post.like_user_id.map(id => id.toString());
             const dislikeUserIds = post.dislike_user_id.map(id => id.toString());
             
-            // const name = await this.getUsersByIds();
+            const userInfo = await this.accountService.getUserById(post.user_id.toString());
             const likeUsers = await this.getUsersByIds(likeUserIds); 
             const dislikeUsers = await this.getUsersByIds(dislikeUserIds); 
     
             return {
                 ...post.toObject(),
+                userInfo: {
+                    username: userInfo.username,
+                    email: userInfo.email,
+                    role: userInfo.role,
+                    status: userInfo.status
+                },
                 like_user_info: likeUsers.map(user => ({
                     _id: user._id,
                     username: user.username,
