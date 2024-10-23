@@ -5,4 +5,5 @@ export class CreatePostDto {
     readonly tag?: string[];
     status?: string;
     photo?: string[];
+    tag_friend?: string[];
 }

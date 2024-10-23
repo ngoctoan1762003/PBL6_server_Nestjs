@@ -37,6 +37,9 @@ export class Post extends Document {
 
     @Prop({ type: [String], default: [] })
     photo: string[];
+
+    @Prop({ type: [String], default: [] })
+    tag_friend: string[];
 }
 
 export const PostSchema = SchemaFactory.createForClass(Post);
