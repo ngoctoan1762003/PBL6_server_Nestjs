@@ -244,8 +244,12 @@ export class AccountService {
         return this.accountModel.findById(userId);
     }
 
-    async getUserByName(userName: string): Promise<User> {
-        return this.accountModel.find({userName});
+    async getUserByPartialName(partialName: string): Promise<User[]> {
+        const searchName = String(partialName);
+    
+        const users = await this.accountModel.find({username: { $regex: searchName, $options: 'i' }, role: 'user'}).exec();
+
+        return users;
     }
 
     async getSelfInfo(userToken: string): Promise<User> {

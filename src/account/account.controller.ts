@@ -82,4 +82,9 @@ export class AccountController {
     async getUserById(@Param('id') userId: string){
         return this.accountService.getUserById(userId);
     }
+
+    @Post('search')
+    async search(@Body('partialName') partialName: string): Promise<User[]> {
+        return this.accountService.getUserByPartialName(partialName);
+    }
 }
