@@ -8,7 +8,7 @@ export class Post extends Document {
   @Prop({ type: MongooseSchema.Types.ObjectId, required: true })
   user_id: Types.ObjectId;
 
-  @Prop({ required: true })
+  @Prop({ required: false })
   content: string;
 
   @Prop({ required: true })
@@ -35,8 +35,11 @@ export class Post extends Document {
   @Prop({ type: Date })
   updated_time: Date; // Explicitly define updatedAt
 
-  @Prop({ type: [String], default: [] })
-  photo: string[];
+    @Prop({ type: [String], default: [] })
+    photo: string[];
+
+    @Prop({ type: [String], default: [] })
+    tag_friend: string[];
 }
 
 export const PostSchema = SchemaFactory.createForClass(Post);

@@ -187,6 +187,24 @@ export class AccountService {
         return { message: 'Password has been successfully updated' };
     }
 
+    async changeBackground(backgroundLink: string, userId: string): Promise<{ message: string }> {
+        console.log(backgroundLink, userId)
+        const user = await this.getUserById(userId)
+
+        if (!user) {
+            throw new HttpException({
+                status: HttpStatus.BAD_REQUEST,
+                error: 'No user found',
+            }, HttpStatus.BAD_REQUEST);
+        }
+
+        user.background_image = backgroundLink;
+
+        await user.save();
+
+        return { message: 'Background has been set succesfully' };
+    }
+
     async changeUserInformation(username: string, password: string, image: string, userToken: string): Promise<{ message: string }> {
         // Verify and decode the token
         let decodedToken;

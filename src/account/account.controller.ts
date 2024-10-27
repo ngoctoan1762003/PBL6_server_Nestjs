@@ -59,6 +59,15 @@ export class AccountController {
             userToken,
         );
     }
+
+    @Put('change-background')
+    async changeBackground(
+        @Body('backgroundLink') backgroundLink: string,
+        @Body('userId') userId: string,
+    ): Promise<{ message: string }>
+    {
+        return this.accountService.changeBackground(backgroundLink, userId);
+    }
     
     @Get('me/info')
     @UseGuards(JwtAuthGuard)

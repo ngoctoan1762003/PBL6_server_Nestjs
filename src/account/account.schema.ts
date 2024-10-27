@@ -46,6 +46,9 @@ export class User extends Document {
 
     @Prop()
     image: string;
+
+    @Prop()
+    background_image: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
