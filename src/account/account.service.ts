@@ -244,6 +244,10 @@ export class AccountService {
         return this.accountModel.findById(userId);
     }
 
+    async getUserByName(userName: string): Promise<User> {
+        return this.accountModel.find({userName});
+    }
+
     async getSelfInfo(userToken: string): Promise<User> {
         let decodedToken;
         try {
