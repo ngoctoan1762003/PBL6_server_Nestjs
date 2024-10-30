@@ -3,6 +3,7 @@ import { Controller, Get, Post, Put, Delete, Body, Param } from '@nestjs/common'
 import { PostService } from './post.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
+import { PostUser } from './post.schema';
 
 @Controller('post')
 export class PostController {
@@ -51,5 +52,10 @@ export class PostController {
     @Put(':id/dislike')
     async dislikePost(@Param('id') postId: string, @Body('userId') userId: string) {
         return this.postService.dislikePost(postId, userId);
+    }
+
+    @Post('search')
+    async search(@Body('tag') tag: string): Promise<PostUser[]> {
+        return this.postService.FindPostByTag(tag);
     }
 }

@@ -2,14 +2,14 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Comment } from './comment.schema';
-import { Post } from 'src/post/post.schema';
+import { PostUser } from 'src/post/post.schema';
 import { CreateCommentDto } from './dto/comment.dto';
 
 @Injectable()
 export class CommentService {
   constructor(
     @InjectModel(Comment.name) private commentModel: Model<Comment>,
-    @InjectModel(Post.name) private postModel: Model<Post>,  // Inject the Post model
+    @InjectModel(PostUser.name) private postModel: Model<PostUser>,  // Inject the Post model
   ) { }
 
   // CommentService.createComment example

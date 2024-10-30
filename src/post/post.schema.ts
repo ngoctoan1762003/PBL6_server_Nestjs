@@ -1,10 +1,12 @@
+/* eslint-disable prettier/prettier */
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document, Schema as MongooseSchema, Types } from "mongoose";
 
 @Schema({
-  timestamps: { createdAt: "created_time", updatedAt: "updatedAt" }, // Rename createdAt to created_time
+  timestamps: { createdAt: "created_time", updatedAt: "updatedAt" ,}, // Rename createdAt to created_time
+  collection: "posts",
 })
-export class Post extends Document {
+export class PostUser extends Document {
   @Prop({ type: MongooseSchema.Types.ObjectId, required: true })
   user_id: Types.ObjectId;
 
@@ -35,11 +37,11 @@ export class Post extends Document {
   @Prop({ type: Date })
   updated_time: Date; // Explicitly define updatedAt
 
-    @Prop({ type: [String], default: [] })
-    photo: string[];
+  @Prop({ type: [String], default: [] })
+  photo: string[];
 
-    @Prop({ type: [String], default: [] })
-    tag_friend: string[];
+  @Prop({ type: [String], default: [] })
+  tag_friend: string[];
 }
 
-export const PostSchema = SchemaFactory.createForClass(Post);
+export const PostSchema = SchemaFactory.createForClass(PostUser);

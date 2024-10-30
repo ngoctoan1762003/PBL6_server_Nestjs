@@ -2,7 +2,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { Post } from './post.schema';
+import { PostUser } from './post.schema';
 import { Comment } from 'src/comment/comment.schema';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
@@ -13,13 +13,13 @@ import { User } from 'src/account/account.schema';
 @Injectable()
 export class PostService {
     constructor(
-        @InjectModel(Post.name) private postModel: Model<Post>,
+        @InjectModel(PostUser.name) private postModel: Model<PostUser>,
         @InjectModel(Comment.name) private commentModel: Model<Comment>,
         @InjectModel('UserPostShare') private readonly userPostShareModel: Model<UserPostShare>,
         private accountService: AccountService,  // Inject AccountService
     ) { }
 
-    async createPost(createPostDto: CreatePostDto): Promise<Post> {
+    async createPost(createPostDto: CreatePostDto): Promise<PostUser> {
         createPostDto.status = "Pending"
         const newPost = new this.postModel(createPostDto);
         return newPost.save();
@@ -61,7 +61,7 @@ export class PostService {
         return allPosts;
     }
     
-    async getPostById(postId: string): Promise<Post> {
+    async getPostById(postId: string): Promise<PostUser> {
         const post = await this.postModel.findById(postId).exec();
         if (!post) {
             throw new NotFoundException('Post not found');
@@ -110,7 +110,7 @@ export class PostService {
         return this.accountService.findByIds(userIds);
     }
 
-    async updatePost(postId: string, updatePostDto: UpdatePostDto): Promise<Post> {
+    async updatePost(postId: string, updatePostDto: UpdatePostDto): Promise<PostUser> {
         const updatedPost = await this.postModel.findByIdAndUpdate(postId, updatePostDto, { new: true }).exec();
         if (!updatedPost) {
             throw new NotFoundException('Post not found');
@@ -118,7 +118,7 @@ export class PostService {
         return updatedPost;
     }
 
-    async approvePost(postId: string): Promise<Post> {
+    async approvePost(postId: string): Promise<PostUser> {
         const updatedPost = await this.postModel.findByIdAndUpdate(postId, { status: "Approved" }, { new: true }).exec();
         if (!updatedPost) {
             throw new NotFoundException('Post not found');
@@ -149,7 +149,7 @@ export class PostService {
     }
     
 
-    async likePost(postId: string, userId: string): Promise<Post> {
+    async likePost(postId: string, userId: string): Promise<PostUser> {
         const post = await this.postModel.findById(postId).exec();
         if (!post) {
             throw new NotFoundException('Post not found');
@@ -171,7 +171,7 @@ export class PostService {
         return post.save();
     }
 
-    async dislikePost(postId: string, userId: string): Promise<Post> {
+    async dislikePost(postId: string, userId: string): Promise<PostUser> {
         const post = await this.postModel.findById(postId).exec();
         if (!post) {
             throw new NotFoundException('Post not found');
@@ -192,4 +192,10 @@ export class PostService {
 
         return post.save();
     }
+
+    async FindPostByTag(tag: string): Promise<PostUser[]>{
+        const posts = await this.postModel.find({tag: tag}).exec();
+        return posts;
+    }
+
 }
