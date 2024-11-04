@@ -68,12 +68,12 @@ export class AccountController {
     {
         return this.accountService.changeBackground(backgroundLink, userId);
     }
-    
+                
     @Get('me/info')
     @UseGuards(JwtAuthGuard)
     async getSelf(
         @Headers('authorization') authHeader: string
-    ): Promise<User>  {
+    ): Promise<{_id: string, username: string, email: string, friend: string[], image: string, background_image: string}>  {
         const userToken = authHeader.split(' ')[1];
         return this.accountService.getSelfInfo(userToken);
     }

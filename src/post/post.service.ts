@@ -113,7 +113,7 @@ export class PostService {
         // Filter out any null values in sharedPosts
         const validSharedPosts = sharedPosts.filter((post) => post !== null);
     
-        let allPosts = [
+        const allPosts = [
             ...userPosts.map((post) => ({
                 user_id: post.user_id,
                 content: post.content,

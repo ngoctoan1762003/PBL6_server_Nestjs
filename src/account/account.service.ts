@@ -53,7 +53,7 @@ export class AccountService {
             save_post: [],
             password_reset_token: null,  // No value at first
             reset_token_expire_time: null,  // No value at first
-            image: ''
+            image: 'https://asset.cloudinary.com/di53bdbjf/1535a48b95aea876b3ee250c77cc1d14'
         });
         // Save and return the new account
         return newAccount.save();
@@ -73,7 +73,7 @@ export class AccountService {
     }
 
 
-    async login(loginDto: LoginDto): Promise<{ userName: string, userId: any, accessToken: string }> {
+    async login(loginDto: LoginDto): Promise<{ userName: string, userId: any, accessToken: string, image: string }> {
         const { email, password } = loginDto;
 
         // Find the user by email
@@ -94,10 +94,7 @@ export class AccountService {
         // Sign the JWT token
         const accessToken = this.jwtService.sign(payload);
 
-        return { userId: user._id.toString(), userName: user.username, accessToken };
-        const userName = user.username;
-        const userId = user._id;
-        return { userName, userId, accessToken };
+        return { userId: user._id.toString(), userName: user.username, accessToken, image: user.image};
     }
 
     async findByIds(userIds: string[]): Promise<User[]> {
@@ -252,7 +249,7 @@ export class AccountService {
         return users;
     }
 
-    async getSelfInfo(userToken: string): Promise<User> {
+    async getSelfInfo(userToken: string): Promise<{_id: string, username: string, email: string, friend: string[], image: string, background_image: string}> {
         let decodedToken;
         try {
             decodedToken = this.jwtService.verify(userToken);
@@ -272,6 +269,13 @@ export class AccountService {
             }, HttpStatus.NOT_FOUND);
         }
     
-        return user;
+        return {
+            _id: user._id.toString(),
+            username: user.username,
+            email: user.email,
+            friend: user.friend.map(id => id.toString()),
+            image: user.image,
+            background_image: user.background_image
+        };
     }
 }
