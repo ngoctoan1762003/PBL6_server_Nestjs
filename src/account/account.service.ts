@@ -24,9 +24,9 @@ export class AccountService {
     }
 
     async signup(signupDto: SignupDto): Promise<User> {
-        // Check if the email is already registered
         const email = signupDto.email;
         const password = signupDto.password;
+        const username = signupDto.username;
         const existingAccount = await this.accountModel.findOne({ email });
         if (existingAccount) {
             throw new HttpException({
@@ -40,7 +40,7 @@ export class AccountService {
 
         // Create the new account with default values
         const newAccount = new this.accountModel({
-            username: email,  // Use email as the default username
+            username,  // Use email as the default username
             email,
             hash_password: hashPassword,
             salt,
