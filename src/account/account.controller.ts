@@ -69,14 +69,13 @@ export class AccountController {
         return this.accountService.changeBackground(backgroundLink, userId);
     }
                 
-    @Get('me/info')
-    @UseGuards(JwtAuthGuard)
-    async getSelf(
-        @Headers('authorization') authHeader: string
-    ): Promise<{_id: string, username: string, email: string, friend: string[], image: string, background_image: string}>  {
-        const userToken = authHeader.split(' ')[1];
-        return this.accountService.getSelfInfo(userToken);
-    }
+    @Get('user/:id')
+async getInfo(
+    @Param('id') userId: string
+): Promise<{_id: string; username: string; email: string; friend: string[]; image: string; background_image: string;}> {
+    return this.accountService.getInfo(userId);
+}
+
     
     @Get(':id')
     async getUserById(@Param('id') userId: string){
@@ -84,7 +83,16 @@ export class AccountController {
     }
 
     @Post('search')
-    async search(@Body('partialName') partialName: string): Promise<User[]> {
-        return this.accountService.getUserByPartialName(partialName);
+    async search(@Body('partialName') partialName: string, @Body('selfId') selfId: string ): Promise<User[]> {
+        return this.accountService.getUserByPartialName(partialName, selfId);
     }
+
+    @Post('friend-status')
+    async getFriendStatus(
+        @Body('senderId') senderId: string,
+        @Body('receiverId') receiverId: string,
+    ): Promise<{ isFriend: boolean; isPending: boolean }> {
+        return this.accountService.getFriendStatus(senderId, receiverId);
+    }
+
 }

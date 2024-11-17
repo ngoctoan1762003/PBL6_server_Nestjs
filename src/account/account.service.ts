@@ -241,41 +241,57 @@ export class AccountService {
         return this.accountModel.findById(userId);
     }
 
-    async getUserByPartialName(partialName: string): Promise<User[]> {
+    async getUserByPartialName(partialName: string, selfId: string): Promise<User[]> {
         const searchName = String(partialName);
     
-        const users = await this.accountModel.find({username: { $regex: searchName, $options: 'i' }, role: 'user'}).exec();
+        const users = await this.accountModel.find({
+            username: { $regex: `^${searchName}`, $options: 'i' },
+            role: 'user',
+            _id: { $ne: selfId }
+        }).exec();
 
         return users;
     }
 
-    async getSelfInfo(userToken: string): Promise<{_id: string, username: string, email: string, friend: string[], image: string, background_image: string}> {
-        let decodedToken;
-        try {
-            decodedToken = this.jwtService.verify(userToken);
-        } catch (error) {
-            throw new UnauthorizedException('Invalid token');
-        }
-    
-        const email = decodedToken.email;
-    
-        // Find the user by email
-        const user = await this.accountModel.findOne({ email });
+    async getInfo(userId: string): Promise<{
+        _id: string;
+        username: string;
+        email: string;
+        friend: string[];
+        image: string;
+        background_image: string;
+    }> {
+        // Tìm user bằng findById
+        const user = await this.accountModel.findById(userId);
     
         if (!user) {
-            throw new HttpException({
-                status: HttpStatus.NOT_FOUND,
-                error: 'User not found',
-            }, HttpStatus.NOT_FOUND);
+            throw new HttpException(
+                {
+                    status: HttpStatus.NOT_FOUND,
+                    error: 'User not found',
+                },
+                HttpStatus.NOT_FOUND,
+            );
         }
     
         return {
             _id: user._id.toString(),
             username: user.username,
             email: user.email,
-            friend: user.friend.map(id => id.toString()),
-            image: user.image,
-            background_image: user.background_image
+            friend: (user.friend || []).map((id) => id.toString()),
+            image: user.image || '', 
+            background_image: user.background_image || '',
         };
     }
+
+    async getFriendStatus(senderId: string, receiverId: string): Promise<{ isFriend: boolean; isPending: boolean }> {
+        const receiver = await this.accountModel.findById(receiverId).exec();
+        
+        const isFriend = receiver.friend.includes(Object(senderId));
+        const isPending = receiver.friend_request.includes(Object(senderId)); 
+    
+        return { isFriend, isPending };
+    }
+    
+    
 }

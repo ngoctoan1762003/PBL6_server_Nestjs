@@ -33,6 +33,9 @@ export class User extends Document {
     friend: MongooseSchema.Types.ObjectId[];
 
     @Prop({ type: [{ type: MongooseSchema.Types.ObjectId, ref: 'User' }], default: [] })
+    friend_request: MongooseSchema.Types.ObjectId[];
+
+    @Prop({ type: [{ type: MongooseSchema.Types.ObjectId, ref: 'User' }], default: [] })
     follower_id: MongooseSchema.Types.ObjectId[];
 
     @Prop({ type: [{ type: MongooseSchema.Types.ObjectId, ref: 'User' }], default: [] })
