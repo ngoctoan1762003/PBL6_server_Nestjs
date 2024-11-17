@@ -241,6 +241,21 @@ export class AccountService {
         return this.accountModel.findById(userId);
     }
 
+    async getListFriendById(userId: string): Promise<{ id: string, username: string, imageUrl: string }[]> {
+        const user = await this.accountModel.findById(userId).exec();
+        const friendRequestIds = user.friend_request;
+
+        const friends = await this.accountModel.find({
+            '_id': { $in: friendRequestIds } 
+        }).select('username image');
+
+        return friends.map(friend => ({
+            id: friend._id.toString(),
+            username: friend.username,
+            imageUrl: friend.image 
+        }));
+    }
+
     async getUserByPartialName(partialName: string, selfId: string): Promise<User[]> {
         const searchName = String(partialName);
     
@@ -284,20 +299,166 @@ export class AccountService {
         };
     }
 
-    async getFriendStatus(senderId: string, receiverId: string): Promise<{ isFriend: boolean; isPending: boolean }> {
+    async getFriendStatus(senderId: string, receiverId: string): Promise<{ isFriend: boolean; isPending: boolean; isRequestSent: boolean }> {
         const senderObjectId = new Types.ObjectId(senderId);
-        const receiver = await this.accountModel.findById(receiverId).exec();
     
+        // Tìm receiver trong cơ sở dữ liệu
+        const receiver = await this.accountModel.findById(receiverId).exec();
+        if (!receiver) {
+            throw new HttpException('Receiver not found', HttpStatus.NOT_FOUND);
+        }
+    
+        // Kiểm tra xem sender có phải là bạn của receiver không
         const isFriend = receiver.friend.some((friend: any) =>
             friend.toString() === senderObjectId.toString()
         );
+    
+        // Kiểm tra xem sender có đang chờ phản hồi kết bạn từ receiver không
         const isPending = receiver.friend_request.some((request: any) =>
             request.toString() === senderObjectId.toString()
         );
     
-        return { isFriend, isPending };
+        // Kiểm tra xem trong danh sách friend_request của người gửi có ID của người nhận không
+        const sender = await this.accountModel.findById(senderId).exec();
+        const isRequestSent = sender.friend_request.some((request: any) =>
+            request.toString() === receiver._id.toString()
+        );
+    
+        // Trả về kết quả với cả ba trường hợp
+        return { isFriend, isPending, isRequestSent };
     }
     
     
+    async addFriend(userId: string, friendId: string): Promise<{ message: string }> {
+        const user = await this.getUserById(friendId);
     
+        if (!user) {
+            throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+        }
+    
+        const friend = await this.getUserById(friendId);
+        if (!friend) {
+            throw new HttpException('Friend not found', HttpStatus.NOT_FOUND);
+        }
+    
+        if (!mongoose.Types.ObjectId.isValid(friendId)) {
+            throw new HttpException('Invalid friend ID', HttpStatus.BAD_REQUEST);
+        }
+    
+        const friendObjectId = new mongoose.Types.ObjectId(userId);
+    
+        if (user.friend_request.some(id => id.toString() === friendId)) {
+            throw new HttpException('Friend already added', HttpStatus.CONFLICT);
+        }
+    
+        user.friend_request.push(friendObjectId as unknown as mongoose.Schema.Types.ObjectId);
+    
+        await user.save();
+    
+        return {
+            message: 'Friend added successfully',
+        };
+    }
+    
+    async confirmFriend(userId: string, friendId: string): Promise<{ message: string }> {
+        const user = await this.getUserById(userId);
+    
+        if (!user) {
+            throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+        }
+    
+        const friend = await this.getUserById(friendId);
+        if (!friend) {
+            throw new HttpException('Friend not found', HttpStatus.NOT_FOUND);
+        }
+    
+        if (!mongoose.Types.ObjectId.isValid(friendId)) {
+            throw new HttpException('Invalid friend ID', HttpStatus.BAD_REQUEST);
+        }
+    
+        const friendObjectId = new mongoose.Types.ObjectId(friendId);
+    
+        if (user.friend.some(id => id.toString() === friendId)) {
+            throw new HttpException('Friend already added', HttpStatus.CONFLICT);
+        }
+    
+        user.friend.push(friendObjectId as unknown as mongoose.Schema.Types.ObjectId);
+        friend.friend.push(user._id as unknown as mongoose.Schema.Types.ObjectId);
+        user.friend_request = user.friend_request.filter(
+            (id) => id.toString() !== friendObjectId.toString()
+        );
+        
+        await user.save();
+        await friend.save();
+    
+        return {
+            message: 'Thêm bạn thành công',
+        };
+    }
+    async unFriend(userId: string, friendId: string): Promise<{ message: string }> {
+        const user = await this.getUserById(userId);
+    
+        if (!user) {
+            throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+        }
+    
+        const friend = await this.getUserById(friendId);
+        if (!friend) {
+            throw new HttpException('Friend not found', HttpStatus.NOT_FOUND);
+        }
+    
+        if (!mongoose.Types.ObjectId.isValid(friendId)) {
+            throw new HttpException('Invalid friend ID', HttpStatus.BAD_REQUEST);
+        }
+    
+        if (user.friend.some(id => id.toString() === friendId) == false) {
+            throw new HttpException('Friend already remove', HttpStatus.CONFLICT);
+        }
+    
+        user.friend = user.friend.filter(
+            (id) => id.toString() !== friendId
+        );
+        friend.friend = friend.friend.filter(
+            (id) => id.toString() !== userId
+        );
+        
+        await user.save();
+        await friend.save();
+    
+        return {
+            message: 'Xóa bạn thành công',
+        };
+    }
+    async removeFriendInvite(userId: string, friendId: string): Promise<{ message: string }> {
+        const user = await this.getUserById(userId);
+    
+        if (!user) {
+            throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+        }
+    
+        const friend = await this.getUserById(friendId);
+        if (!friend) {
+            throw new HttpException('Friend not found', HttpStatus.NOT_FOUND);
+        }
+    
+        if (!mongoose.Types.ObjectId.isValid(friendId)) {
+            throw new HttpException('Invalid friend ID', HttpStatus.BAD_REQUEST);
+        }
+    
+        const friendObjectId = new mongoose.Types.ObjectId(friendId);
+    
+        if (user.friend_request.some(id => id.toString() === friendId) == false) {
+            throw new HttpException('Friend already remove', HttpStatus.CONFLICT);
+        }
+    
+        user.friend_request = user.friend_request.filter(
+            (id) => id.toString() !== friendObjectId.toString()
+        );
+        
+        await user.save();
+    
+        return {
+            message: 'Xóa bạn thành công',
+        };
+    }
 }

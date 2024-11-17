@@ -9,11 +9,11 @@ import { AdminAuthGuard } from 'src/guard/admin_auth.guard';
 
 @Controller('account')
 export class AccountController {
-    constructor(private accountService: AccountService){} 
+    constructor(private accountService: AccountService) { }
 
     @Get()
     @UseGuards(AdminAuthGuard)
-    async getAllAccount() : Promise<User[]>{
+    async getAllAccount(): Promise<User[]> {
         return this.accountService.findAll();
     }
 
@@ -41,16 +41,48 @@ export class AccountController {
     async changePassword(@Body('token') token: string, @Body('newPassword') newPassword: string) {
         return this.accountService.changePassword(token, newPassword);
     }
+    
+    @Put('add-friend')
+    async addFriend(
+        @Body('friendId') friendId: string,
+        @Body('userId') userId: string
+    ): Promise<{ message: string }> {
+        return this.accountService.addFriend(userId, friendId);
+    }
+
+    @Put('confirm-friend')
+    async confirmFriend(
+        @Body('friendId') friendId: string,
+        @Body('userId') userId: string
+    ): Promise<{ message: string }> {
+        return this.accountService.confirmFriend(userId, friendId);
+    }
+
+    @Put('unfriend')
+    async unFriend(
+        @Body('friendId') friendId: string,
+        @Body('userId') userId: string
+    ): Promise<{ message: string }> {
+        return this.accountService.unFriend(userId, friendId);
+    }
+
+    @Put('remove-friend-invite')
+    async removeFriend(
+        @Body('friendId') friendId: string,
+        @Body('userId') userId: string
+    ): Promise<{ message: string }> {
+        return this.accountService.removeFriendInvite(userId, friendId);
+    }
 
     @Put('change-info')
-    @UseGuards(JwtAuthGuard) 
+    @UseGuards(JwtAuthGuard)
     async changeUserInformation(
         @Headers('authorization') authHeader: string,
         @Body('username') username: string,
         @Body('password') password: string,
         @Body('image') image: string,
     ): Promise<{ message: string }> {
-        const userToken = authHeader.split(' ')[1]; 
+        const userToken = authHeader.split(' ')[1];
 
         return this.accountService.changeUserInformation(
             username,
@@ -64,26 +96,25 @@ export class AccountController {
     async changeBackground(
         @Body('backgroundLink') backgroundLink: string,
         @Body('userId') userId: string,
-    ): Promise<{ message: string }>
-    {
+    ): Promise<{ message: string }> {
         return this.accountService.changeBackground(backgroundLink, userId);
     }
-                
-    @Get('user/:id')
-async getInfo(
-    @Param('id') userId: string
-): Promise<{_id: string; username: string; email: string; friend: string[]; image: string; background_image: string;}> {
-    return this.accountService.getInfo(userId);
-}
 
-    
+    @Get('user/:id')
+    async getInfo(
+        @Param('id') userId: string
+    ): Promise<{ _id: string; username: string; email: string; friend: string[]; image: string; background_image: string; }> {
+        return this.accountService.getInfo(userId);
+    }
+
+
     @Get(':id')
-    async getUserById(@Param('id') userId: string){
+    async getUserById(@Param('id') userId: string) {
         return this.accountService.getUserById(userId);
     }
 
     @Post('search')
-    async search(@Body('partialName') partialName: string, @Body('selfId') selfId: string ): Promise<User[]> {
+    async search(@Body('partialName') partialName: string, @Body('selfId') selfId: string): Promise<User[]> {
         return this.accountService.getUserByPartialName(partialName, selfId);
     }
 
@@ -93,6 +124,11 @@ async getInfo(
         @Body('receiverId') receiverId: string,
     ): Promise<{ isFriend: boolean; isPending: boolean }> {
         return this.accountService.getFriendStatus(senderId, receiverId);
+    }
+
+    @Get('list-friend/:id')
+    async getListFriendById(@Param('id') userId: string) {
+        return this.accountService.getListFriendById(userId);
     }
 
 }
