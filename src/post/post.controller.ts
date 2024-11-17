@@ -7,7 +7,7 @@ import { PostUser } from './post.schema';
 
 @Controller('post')
 export class PostController {
-    constructor(private postService: PostService) {}
+    constructor(private postService: PostService) { }
 
     @Post()
     async createPost(@Body() createPostDto: CreatePostDto) {
@@ -29,9 +29,9 @@ export class PostController {
         return this.postService.getAllPostAndShareByUserId(postId);
     }
 
-    @Put(':id')
-    async updatePost(@Param('id') postId: string, @Body() updatePostDto: UpdatePostDto) {
-        return this.postService.updatePost(postId, updatePostDto);
+    @Delete(':id')
+    async deletePost(@Param('id') postId: string) {
+        return this.postService.deletePost(postId);
     }
 
     @Put('/approve/:id')
@@ -39,9 +39,14 @@ export class PostController {
         return this.postService.approvePost(postId);
     }
 
-    @Delete(':id')
-    async deletePost(@Param('id') postId: string) {
-        return this.postService.deletePost(postId);
+    @Put('/report')
+    async report(@Body('postId') postId: string): Promise<{ message: string }> {
+        return this.postService.reportPost(postId);
+    }
+
+    @Put(':id')
+    async updatePost(@Param('id') postId: string, @Body() updatePostDto: UpdatePostDto) {
+        return this.postService.updatePost(postId, updatePostDto);
     }
 
     @Put(':id/like')

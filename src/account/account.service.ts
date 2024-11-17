@@ -24,9 +24,9 @@ export class AccountService {
     }
 
     async signup(signupDto: SignupDto): Promise<User> {
-        // Check if the email is already registered
         const email = signupDto.email;
         const password = signupDto.password;
+        const username = signupDto.username;
         const existingAccount = await this.accountModel.findOne({ email });
         if (existingAccount) {
             throw new HttpException({
@@ -40,7 +40,7 @@ export class AccountService {
 
         // Create the new account with default values
         const newAccount = new this.accountModel({
-            username: email,  // Use email as the default username
+            username,  // Use email as the default username
             email,
             hash_password: hashPassword,
             salt,
@@ -53,7 +53,7 @@ export class AccountService {
             save_post: [],
             password_reset_token: null,  // No value at first
             reset_token_expire_time: null,  // No value at first
-            image: 'https://asset.cloudinary.com/di53bdbjf/1535a48b95aea876b3ee250c77cc1d14'
+            image: 'https://res.cloudinary.com/dvznvebzi/image/upload/v1730683838/default-avatar-2_uvhssd.png'
         });
         // Save and return the new account
         return newAccount.save();

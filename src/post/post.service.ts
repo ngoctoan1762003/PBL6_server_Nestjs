@@ -263,4 +263,12 @@ export class PostService {
         return posts;
     }
 
+    async reportPost(postId: string): Promise<{message: string}> {
+        const post = await this.postModel.findById(postId).exec();
+        post.status = "reported";
+        post.save();
+        return {
+            message: "Report success"
+        }
+    }
 }
