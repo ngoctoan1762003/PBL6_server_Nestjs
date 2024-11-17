@@ -73,7 +73,7 @@ export class AccountController {
     @UseGuards(JwtAuthGuard)
     async getSelf(
         @Headers('authorization') authHeader: string
-    ): Promise<{_id: string, username: string, email: string, friend: string[], image: string, background_image: string}>  {
+    ): Promise<{_id: string, username: string, email: string, friend: string[], follower_id: string[], image: string, background_image: string}>  {
         const userToken = authHeader.split(' ')[1];
         return this.accountService.getSelfInfo(userToken);
     }
@@ -86,5 +86,41 @@ export class AccountController {
     @Post('search')
     async search(@Body('partialName') partialName: string): Promise<User[]> {
         return this.accountService.getUserByPartialName(partialName);
+    }
+
+    @Put('add-friend')
+    async addFriend(
+        @Body('friendId') friendId:string,
+        @Body('userId') userId:string
+    ) : Promise<{message: string}>
+    {
+        return this.accountService.addFriend(userId, friendId);
+    }
+
+    @Put('confirm-friend')
+    async confirmFriend(
+        @Body('friendId') friendId:string,
+        @Body('userId') userId:string
+    ) : Promise<{message: string}>
+    {
+        return this.accountService.confirmFriend(userId, friendId);
+    }
+
+    @Put('unfriend')
+    async unFriend(
+        @Body('friendId') friendId:string,
+        @Body('userId') userId:string
+    ) : Promise<{message: string}>
+    {
+        return this.accountService.unFriend(userId, friendId);
+    }
+
+    @Put('remove-friend-invite')
+    async removeFriend(
+        @Body('friendId') friendId:string,
+        @Body('userId') userId:string
+    ) : Promise<{message: string}>
+    {
+        return this.accountService.removeFriendInvite(userId, friendId);
     }
 }
