@@ -3,7 +3,7 @@ import { SignupDto } from './dto/signup.dto';
 import { Injectable, HttpStatus, HttpException, UnauthorizedException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from './account.schema';
-import mongoose from 'mongoose';
+import mongoose, { Types } from 'mongoose';
 import { generateSaltAndHash, validatePassword } from './auth.utils'; // Import the utility function
 import { LoginDto } from './dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
@@ -285,13 +285,19 @@ export class AccountService {
     }
 
     async getFriendStatus(senderId: string, receiverId: string): Promise<{ isFriend: boolean; isPending: boolean }> {
+        const senderObjectId = new Types.ObjectId(senderId);
         const receiver = await this.accountModel.findById(receiverId).exec();
-        
-        const isFriend = receiver.friend.includes(Object(senderId));
-        const isPending = receiver.friend_request.includes(Object(senderId)); 
+    
+        const isFriend = receiver.friend.some((friend: any) =>
+            friend.toString() === senderObjectId.toString()
+        );
+        const isPending = receiver.friend_request.some((request: any) =>
+            request.toString() === senderObjectId.toString()
+        );
     
         return { isFriend, isPending };
     }
+    
     
     
 }
