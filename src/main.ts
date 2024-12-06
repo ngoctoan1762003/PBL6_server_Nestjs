@@ -1,11 +1,14 @@
 /* eslint-disable prettier/prettier */
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
+import { WsAdapter } from '@nestjs/platform-ws';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Enable CORS from all sources
+  // Enable CORS from all sources  
+  app.useWebSocketAdapter(new WsAdapter(app));
+
   app.enableCors({
     origin: "*", // Cho phép tất cả nguồn
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",

@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
 import { Types } from 'mongoose';
 import { ConversationService } from './conversation.service';
 
@@ -11,12 +11,15 @@ export class ConversationController {
     @Body('user_id_1') user_id_1: string,
     @Body('user_id_2') user_id_2: string,
   ) {
-    return this.conversationService.createConversation(new Types.ObjectId(user_id_1), new Types.ObjectId(user_id_2));
+    return this.conversationService.createConversation(
+      new Types.ObjectId(user_id_1), 
+      new Types.ObjectId(user_id_2)
+    );
   }
 
   @Get()
   async getAllConversationsByUserId(
-    @Body('user_id') userId: string
+    @Query('user_id') userId: string  
   ) {
     return this.conversationService.getAllConversationsByUserId(userId);
   }

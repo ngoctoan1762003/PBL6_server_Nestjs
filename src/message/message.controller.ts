@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
 import { MessageService } from './message.service';
 import { Types } from 'mongoose';
 import { CreateMessageDto } from './dto/create-message.dto';
@@ -13,14 +13,14 @@ export class MessageController {
     return this.messageService.createMessage(createMessageDto);
   }
 
-  @Get()
+  @Get('/conversation')  // More specific route first
   async getAllMessagesByConversationId(
-    @Body('conversation_id') conversationId: string
+    @Query('id') id: string
   ) {
-    return this.messageService.getAllMessagesByConversationId(conversationId);
+    return this.messageService.getAllMessagesByConversationId(id);
   }
 
-  @Get(':id')
+  @Get(':id')  // This is the more general route
   async getMessageById(@Param('id') id: string) {
     return this.messageService.getMessageById(id);
   }
