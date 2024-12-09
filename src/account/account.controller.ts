@@ -126,9 +126,13 @@ export class AccountController {
         return this.accountService.getFriendStatus(senderId, receiverId);
     }
 
+    @Get('list-friend_request/:id')
+    async getListFriendRequestById(@Param('id') userId: string) {
+        return this.accountService.getListFriendRequestById(userId);
+    }
+
     @Get('list-friend/:id')
     async getListFriendById(@Param('id') userId: string) {
         return this.accountService.getListFriendById(userId);
     }
-
 }
