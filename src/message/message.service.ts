@@ -84,7 +84,6 @@ export class MessageService {
 
   async getMessageById(id: string): Promise<Message> {
     if (!Types.ObjectId.isValid(id)) {
-      console.log(id)
       throw new NotFoundException(`Invalid ID format`);
     }
 

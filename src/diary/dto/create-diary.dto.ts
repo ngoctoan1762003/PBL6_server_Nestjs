@@ -16,9 +16,11 @@ export class CreateDiaryDto {
     @IsString()
     content: string;
 
-    @IsString()
-    title: string;
+    day: Date;
 
+    @IsArray()
+    images: string[];
+    
     @IsArray()
     @ArrayMinSize(3)
     @ValidateNested({ each: true })

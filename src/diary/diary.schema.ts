@@ -19,11 +19,14 @@ export class Diary extends Document {
     @Prop({ required: true })
     content: string;
 
-    @Prop({ required: true })
-    title: string;
-
     @Prop({ required: true, type: [{ emotion_name: String, emotion_percent: String }] })
     emotion: Emotion[];
+
+    @Prop({required: true})
+    day: Date;
+
+    @Prop({ required: true })
+    images: string[];
 }
 
 export const DiarySchema = SchemaFactory.createForClass(Diary);

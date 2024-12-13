@@ -243,12 +243,13 @@ export class AccountService {
 
     async getListFriendRequestById(userId: string): Promise<{ id: string, username: string, imageUrl: string }[]> {
         const user = await this.accountModel.findById(userId).exec();
+        console.log(user)
         const friendRequestIds = user.friend_request;
-
+        
         const friends = await this.accountModel.find({
             '_id': { $in: friendRequestIds } 
         }).select('username image');
-
+        console.log(friends)
         return friends.map(friend => ({
             id: friend._id.toString(),
             username: friend.username,
