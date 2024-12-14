@@ -354,24 +354,79 @@ export class PostService {
         return report.save();
     }    
 
-    async getReportPost(): Promise<{ post_id: string; report_count: number }[]> {
+    async getReportPost(): Promise<{ 
+        post_id: string; 
+        report_count: number; 
+        reports: any[]; 
+        post_owner: { user_id: string; username: string; email: string } | null; 
+    }[]> {
         const reports = await this.reportPostModel.aggregate([
+            // Group reports by post_id
             {
                 $group: {
-                    _id: "$post_id", 
-                    report_count: { $sum: 1 }, 
+                    _id: "$post_id",
+                    report_count: { $sum: 1 },
+                    reports: { $push: "$$ROOT" },
                 },
             },
+            // Lookup post details from the posts collection
+            {
+                $lookup: {
+                    from: "posts", // Collection name for PostUser schema
+                    localField: "_id", // _id is the post_id in the group
+                    foreignField: "_id", // Match with the _id of the posts collection
+                    as: "post_details",
+                },
+            },
+            // Lookup user details for the post owner
+            {
+                $lookup: {
+                    from: "users", // Collection name for users
+                    localField: "post_details.user_id",
+                    foreignField: "_id",
+                    as: "post_owner",
+                },
+            },
+            // Simplify the results
             {
                 $project: {
-                    post_id: "$_id", // Rename _id to post_id
-                    report_count: 1, // Include report_count in the output
-                    _id: 0, // Exclude the default _id field from the result
+                    post_id: "$_id",
+                    report_count: 1,
+                    reports: {
+                        $map: {
+                            input: "$reports",
+                            as: "report",
+                            in: {
+                                _id: "$$report._id",
+                                user_id: "$$report.user_id",
+                                content: "$$report.content",
+                                created_time: "$$report.created_time",
+                            },
+                        },
+                    },
+                    post_owner: {
+                        $arrayElemAt: [
+                            {
+                                $map: {
+                                    input: "$post_owner",
+                                    as: "owner",
+                                    in: {
+                                        user_id: "$$owner._id",
+                                        username: "$$owner.username",
+                                        email: "$$owner.email",
+                                    },
+                                },
+                            },
+                            0,
+                        ],
+                    },
+                    _id: 0,
                 },
             },
         ]).exec();
     
         return reports;
     }
+    
     
 }
