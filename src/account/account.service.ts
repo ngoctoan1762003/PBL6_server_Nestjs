@@ -410,6 +410,7 @@ export class AccountService {
         }
     
         const friendObjectId = new mongoose.Types.ObjectId(friendId);
+        const UserObjectId = new mongoose.Types.ObjectId(userId);
     
         if (user.friend.some(id => id.toString() === friendId)) {
             throw new HttpException('Friend already added', HttpStatus.CONFLICT);
@@ -419,6 +420,9 @@ export class AccountService {
         friend.friend.push(user._id as unknown as mongoose.Schema.Types.ObjectId);
         user.friend_request = user.friend_request.filter(
             (id) => id.toString() !== friendObjectId.toString()
+        );
+        friend.friend_send_request = friend.friend_send_request.filter(
+            (id) => id.toString() !== UserObjectId.toString()
         );
         
         await user.save();
@@ -479,6 +483,7 @@ export class AccountService {
         }
     
         const friendObjectId = new mongoose.Types.ObjectId(friendId);
+        const UserObjectId = new mongoose.Types.ObjectId(userId);
     
         if (user.friend_request.some(id => id.toString() === friendId) == false) {
             throw new HttpException('Friend already remove', HttpStatus.CONFLICT);
@@ -486,6 +491,9 @@ export class AccountService {
     
         user.friend_request = user.friend_request.filter(
             (id) => id.toString() !== friendObjectId.toString()
+        );
+        friend.friend_send_request = friend.friend_send_request.filter(
+            (id) => id.toString() !== UserObjectId.toString()
         );
         
         await user.save();
