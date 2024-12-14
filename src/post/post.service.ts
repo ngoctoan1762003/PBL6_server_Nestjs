@@ -9,11 +9,14 @@ import { UpdatePostDto } from './dto/update-post.dto';
 import { UserPostShare } from 'src/user_post_share/user_post_share.interface';
 import { AccountService } from 'src/account/account.service';
 import { User } from 'src/account/account.schema';
+import { ReportPost } from './reportpost.schema';
+import { CreateReportPostDto } from './dto/create-report-post.dto';
 
 @Injectable()
 export class PostService {
     constructor(
         @InjectModel(PostUser.name) private postModel: Model<PostUser>,
+        @InjectModel(ReportPost.name) private reportPostModel: Model<ReportPost>,
         @InjectModel(Comment.name) private commentModel: Model<Comment>,
         @InjectModel('UserPostShare') private readonly userPostShareModel: Model<UserPostShare>,
         private accountService: AccountService,  // Inject AccountService
@@ -263,12 +266,36 @@ export class PostService {
         return posts;
     }
 
-    async reportPost(postId: string): Promise<{message: string}> {
-        const post = await this.postModel.findById(postId).exec();
-        post.status = "reported";
-        post.save();
-        return {
-            message: "Report success"
+    async reportPost(reportPostDto: CreateReportPostDto): Promise<ReportPost> {
+        const { post_id, user_id } = reportPostDto;
+    
+        const existingReport = await this.reportPostModel.findOne({ post_id, user_id }).exec();
+        if (existingReport) {
+            throw new Error('You have already reported this post.');
         }
+    
+        const report = new this.reportPostModel(reportPostDto);
+        return report.save();
+    }    
+
+    async getReportPost(): Promise<{ post_id: string; report_count: number }[]> {
+        const reports = await this.reportPostModel.aggregate([
+            {
+                $group: {
+                    _id: "$post_id", 
+                    report_count: { $sum: 1 }, 
+                },
+            },
+            {
+                $project: {
+                    post_id: "$_id", // Rename _id to post_id
+                    report_count: 1, // Include report_count in the output
+                    _id: 0, // Exclude the default _id field from the result
+                },
+            },
+        ]).exec();
+    
+        return reports;
     }
+    
 }
