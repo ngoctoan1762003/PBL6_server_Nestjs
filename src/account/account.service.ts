@@ -497,6 +497,7 @@ export class AccountService {
         );
         
         await user.save();
+        await friend.save();
     
         return {
             message: 'Xóa bạn thành công',
