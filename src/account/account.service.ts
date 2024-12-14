@@ -272,6 +272,21 @@ export class AccountService {
         }));
     }
 
+    async getListFriendSentById(userId: string): Promise<{ id: string, username: string, imageUrl: string }[]> {
+        const user = await this.accountModel.findById(userId).exec();
+        const friendSentIds = user.friend_send_request;
+
+        const friends = await this.accountModel.find({
+            '_id': { $in: friendSentIds } 
+        }).select('username image');
+
+        return friends.map(friend => ({
+            id: friend._id.toString(),
+            username: friend.username,
+            imageUrl: friend.image 
+        }));
+    }
+
     async getUserByPartialName(partialName: string, selfId: string): Promise<User[]> {
         const searchName = String(partialName);
     
@@ -347,7 +362,7 @@ export class AccountService {
     
     async addFriend(userId: string, friendId: string): Promise<{ message: string }> {
         const user = await this.getUserById(friendId);
-    
+        const self = await this.getUserById(userId);
         if (!user) {
             throw new HttpException('User not found', HttpStatus.NOT_FOUND);
         }
@@ -362,14 +377,18 @@ export class AccountService {
         }
     
         const friendObjectId = new mongoose.Types.ObjectId(userId);
+        const friend_sent = new mongoose.Types.ObjectId(friendId);
+    
     
         if (user.friend_request.some(id => id.toString() === friendId)) {
             throw new HttpException('Friend already added', HttpStatus.CONFLICT);
         }
     
         user.friend_request.push(friendObjectId as unknown as mongoose.Schema.Types.ObjectId);
+        self.friend_send_request.push(friend_sent as unknown as mongoose.Schema.Types.ObjectId)
     
         await user.save();
+        await self.save();
     
         return {
             message: 'Friend added successfully',

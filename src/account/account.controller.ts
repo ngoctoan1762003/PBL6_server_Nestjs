@@ -135,4 +135,9 @@ export class AccountController {
     async getListFriendById(@Param('id') userId: string) {
         return this.accountService.getListFriendById(userId);
     }
+
+    @Get('list-friend-sent/:id')
+    async getListFriendSentById(@Param('id') userId: string) {
+        return this.accountService.getListFriendSentById(userId);
+    }
 }
