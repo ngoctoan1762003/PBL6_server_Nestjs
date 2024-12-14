@@ -428,5 +428,17 @@ export class PostService {
         return reports;
     }
     
+    async deleteReportsByPostId(postId: string): Promise<{ message: string; deletedCount: number }> {
+        if (!Types.ObjectId.isValid(postId)) {
+            throw new Error('Invalid Post ID format');
+        }
+    
+        const result = await this.reportPostModel.deleteMany({ post_id: postId }).exec();
+    
+        return {
+            message: 'Reports deleted successfully',
+            deletedCount: result.deletedCount || 0,
+        };
+    }
     
 }

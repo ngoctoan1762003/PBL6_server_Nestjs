@@ -30,7 +30,7 @@ export class PostController {
     async getAllReportedPosts(): Promise<{ post_id: string; report_count: number }[]> {
         return this.postService.getReportPost();
     }
-    
+
     @Get(':id')
     async getPostById(@Param('id') postId: string) {
         return this.postService.getPostById(postId);
@@ -39,6 +39,11 @@ export class PostController {
     @Get('/user/:id')
     async getPostByUserId(@Param('id') postId: string) {
         return this.postService.getAllPostAndShareByUserId(postId);
+    }
+
+    @Delete('/report/:id')
+    async deleteReports(@Param('id') postId: string): Promise<{ message: string; deletedCount: number }> {
+        return this.postService.deleteReportsByPostId(postId);
     }
 
     @Delete(':id')
@@ -80,4 +85,5 @@ export class PostController {
     async search(@Body('tag') tag: string): Promise<PostUser[]> {
         return this.postService.FindPostByTag(tag);
     }
+
 }
