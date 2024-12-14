@@ -125,7 +125,8 @@ export class PostService {
                 comment_id: post.comment_id,
                 tag: post.tag,
                 group_id: post.group_id,
-                time: post.created_time
+                created_time: post.created_time,
+                _id: post._id
             })),
             ...validSharedPosts.map((post) => ({
                 user_id: post.user_id,
@@ -135,7 +136,8 @@ export class PostService {
                 comment_id: post.comment_id,
                 tag: post.tag,
                 group_id: post.group_id,
-                time: post.shared_time
+                created_time: post.shared_time,
+                _id: post._id
             }))
         ];
     
