@@ -1,9 +1,11 @@
+import { ReportPost } from './reportpost.schema';
 /* eslint-disable prettier/prettier */
 import { Controller, Get, Post, Put, Delete, Body, Param } from '@nestjs/common';
 import { PostService } from './post.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PostUser } from './post.schema';
+import { CreateReportPostDto } from './dto/create-report-post.dto';
 
 @Controller('post')
 export class PostController {
@@ -14,9 +16,19 @@ export class PostController {
         return this.postService.createPost(createPostDto);
     }
 
+    @Post('/report')
+    async report(@Body() reportPost: CreateReportPostDto): Promise<ReportPost> {
+        return this.postService.reportPost(reportPost);
+    }
+
     @Get()
     async getAllPosts() {
         return this.postService.getAllPosts();
+    }
+
+    @Get('/report')
+    async getAllReportedPosts(): Promise<{ post_id: string; report_count: number }[]> {
+        return this.postService.getReportPost();
     }
 
     @Get(':id')
@@ -29,6 +41,11 @@ export class PostController {
         return this.postService.getAllPostAndShareByUserId(postId);
     }
 
+    @Delete('/report/:id')
+    async deleteReports(@Param('id') postId: string): Promise<{ message: string; deletedCount: number }> {
+        return this.postService.deleteReportsByPostId(postId);
+    }
+
     @Delete(':id')
     async deletePost(@Param('id') postId: string) {
         return this.postService.deletePost(postId);
@@ -37,11 +54,6 @@ export class PostController {
     @Put('/approve/:id')
     async approvePost(@Param('id') postId: string) {
         return this.postService.approvePost(postId);
-    }
-
-    @Put('/report')
-    async report(@Body('postId') postId: string): Promise<{ message: string }> {
-        return this.postService.reportPost(postId);
     }
 
     @Put(':id')
@@ -73,4 +85,5 @@ export class PostController {
     async search(@Body('tag') tag: string): Promise<PostUser[]> {
         return this.postService.FindPostByTag(tag);
     }
+
 }

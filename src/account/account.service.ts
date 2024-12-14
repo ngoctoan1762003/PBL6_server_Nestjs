@@ -333,13 +333,11 @@ export class AccountService {
     async getFriendStatus(senderId: string, receiverId: string): Promise<{ isFriend: boolean; isPending: boolean; isRequestSent: boolean }> {
         const senderObjectId = new Types.ObjectId(senderId);
     
-        // Tìm receiver trong cơ sở dữ liệu
         const receiver = await this.accountModel.findById(receiverId).exec();
         if (!receiver) {
             throw new HttpException('Receiver not found', HttpStatus.NOT_FOUND);
         }
-    
-        // Kiểm tra xem sender có phải là bạn của receiver không
+
         const isFriend = receiver.friend.some((friend: any) =>
             friend.toString() === senderObjectId.toString()
         );
