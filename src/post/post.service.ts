@@ -141,7 +141,7 @@ export class PostService {
             }))
         ];
     
-        allPosts.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
+        allPosts.sort((a, b) => new Date(b.created_time).getTime() - new Date(a.created_time).getTime());
     
         const result = await Promise.all(allPosts.map(async (post) => {
             const likeUserIds = post.like_user_id.map(id => id.toString());
