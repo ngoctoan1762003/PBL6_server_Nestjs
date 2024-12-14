@@ -66,6 +66,16 @@ export class PostController {
         return this.postService.dislikePost(postId, userId);
     }
 
+    @Put(':id/haha')
+    async hahaPost(@Param('id') postId: string, @Body('userId') userId: string) {
+        return this.postService.hahaPost(postId, userId);
+    }
+
+    @Put(':id/angry')
+    async angryPost(@Param('id') postId: string, @Body('userId') userId: string) {
+        return this.postService.angryPost(postId, userId);
+    }
+
     @Post('search')
     async search(@Body('tag') tag: string): Promise<PostUser[]> {
         return this.postService.FindPostByTag(tag);

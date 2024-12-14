@@ -227,6 +227,14 @@ export class PostService {
             (id) => id.toString() !== userId
         );
 
+        post.haha_user_id = post.haha_user_id.filter(
+            (id) => id.toString() !== userId
+        );
+
+        post.angry_user_id = post.angry_user_id.filter(
+            (id) => id.toString() !== userId
+        );
+
         if (!post.like_user_id.includes(userId as any)) {
             post.like_user_id.push(userId as any);
         }
@@ -249,11 +257,79 @@ export class PostService {
             (id) => id.toString() !== userId
         );
 
+        post.haha_user_id = post.haha_user_id.filter(
+            (id) => id.toString() !== userId
+        );
+
+        post.angry_user_id = post.angry_user_id.filter(
+            (id) => id.toString() !== userId
+        );
+
         if (!post.dislike_user_id.includes(userId as any)) {
             post.dislike_user_id.push(userId as any);
         }
         else {
             post.dislike_user_id = post.dislike_user_id.filter(
+                (id) => id.toString() !== userId
+            );
+        }
+
+        return post.save();
+    }
+
+    async hahaPost(postId: string, userId: string): Promise<PostUser> {
+        const post = await this.postModel.findById(postId).exec();
+        if (!post) {
+            throw new NotFoundException('Post not found');
+        }
+
+        post.like_user_id = post.like_user_id.filter(
+            (id) => id.toString() !== userId
+        );
+
+        post.dislike_user_id = post.dislike_user_id.filter(
+            (id) => id.toString() !== userId
+        );
+
+        post.angry_user_id = post.angry_user_id.filter(
+            (id) => id.toString() !== userId
+        );
+
+        if (!post.haha_user_id.includes(userId as any)) {
+            post.haha_user_id.push(userId as any);
+        }
+        else {
+            post.haha_user_id = post.haha_user_id.filter(
+                (id) => id.toString() !== userId
+            );
+        }
+
+        return post.save();
+    }
+
+    async angryPost(postId: string, userId: string): Promise<PostUser> {
+        const post = await this.postModel.findById(postId).exec();
+        if (!post) {
+            throw new NotFoundException('Post not found');
+        }
+
+        post.like_user_id = post.like_user_id.filter(
+            (id) => id.toString() !== userId
+        );
+
+        post.dislike_user_id = post.dislike_user_id.filter(
+            (id) => id.toString() !== userId
+        );
+
+        post.haha_user_id = post.haha_user_id.filter(
+            (id) => id.toString() !== userId
+        );
+
+        if (!post.angry_user_id.includes(userId as any)) {
+            post.angry_user_id.push(userId as any);
+        }
+        else {
+            post.angry_user_id = post.angry_user_id.filter(
                 (id) => id.toString() !== userId
             );
         }

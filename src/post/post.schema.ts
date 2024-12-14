@@ -23,6 +23,12 @@ export class PostUser extends Document {
   dislike_user_id: Types.ObjectId[];
 
   @Prop({ type: [MongooseSchema.Types.ObjectId], default: [] })
+  angry_user_id: Types.ObjectId[];
+
+  @Prop({ type: [MongooseSchema.Types.ObjectId], default: [] })
+  haha_user_id: Types.ObjectId[];
+
+  @Prop({ type: [MongooseSchema.Types.ObjectId], default: [] })
   comment_id: Types.ObjectId[];
 
   @Prop({ type: [String], default: [] })
