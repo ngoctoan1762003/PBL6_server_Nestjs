@@ -45,7 +45,8 @@ export class PostService {
                     username: userInfo.username,
                     email: userInfo.email,
                     role: userInfo.role,
-                    status: userInfo.status
+                    status: userInfo.status,
+                    image: userInfo.image,
                 },
                 like_user_info: likeUsers.map(user => ({
                     _id: user._id,
@@ -125,7 +126,8 @@ export class PostService {
                 comment_id: post.comment_id,
                 tag: post.tag,
                 group_id: post.group_id,
-                time: post.created_time
+                created_time: post.created_time,
+                _id: post._id
             })),
             ...validSharedPosts.map((post) => ({
                 user_id: post.user_id,
@@ -135,11 +137,12 @@ export class PostService {
                 comment_id: post.comment_id,
                 tag: post.tag,
                 group_id: post.group_id,
-                time: post.shared_time
+                created_time: post.shared_time,
+                _id: post._id
             }))
         ];
     
-        allPosts.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
+        allPosts.sort((a, b) => new Date(b.created_time).getTime() - new Date(a.created_time).getTime());
     
         const result = await Promise.all(allPosts.map(async (post) => {
             const likeUserIds = post.like_user_id.map(id => id.toString());
