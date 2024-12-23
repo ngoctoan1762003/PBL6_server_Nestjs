@@ -12,17 +12,23 @@ export class NotificationController {
     return this.notificationService.createNotification(createNotificationDto);
   }
 
-  @Get()
+  @Post()
+  async createNotificationByPost(@Body() createNotificationDto: CreateNotificationDto) {
+    return this.notificationService.createNotificationByPost(createNotificationDto);
+  }
+
+  @Get(':user_id')
   async getAllNotificationsByUserId(
-    @Body('user_id') userId: string
+  @Param('user_id') userId: string
   ) {
     return this.notificationService.getAllNotificationsByUserId(userId);
   }
 
-  @Get(':id')
-  async getNotificationById(@Param('id') id: string) {
-    return this.notificationService.getNotificationById(id);
-  }
+
+  // @Get(':id')
+  // async getNotificationById(@Param('id') id: string) {
+  //   return this.notificationService.getNotificationById(id);  
+  // }
 
   @Put(':id')
   async updateNotification(
