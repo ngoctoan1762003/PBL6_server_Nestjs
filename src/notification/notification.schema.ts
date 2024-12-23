@@ -6,7 +6,7 @@ export const NotificationSchema = new Schema({
   type: { type: String, default: null },
   is_new: { type: Boolean, default: true },
   link_post: { type: String, default: null },
-  link_comment: { type: String, default: null },
+  link_comment: { type: String, ref: 'User', default: null },
   link_user: { type: String, ref: 'User', default: null },
   link_group: { type: String, default: null },
   created_time: { type: Date, default: Date.now },

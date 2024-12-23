@@ -1,7 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { AccountService } from '../account/account.service';
 import { Notification } from './notification.interface';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { UpdateNotificationDto } from './dto/update-notification.dto';
@@ -10,7 +9,6 @@ import { UpdateNotificationDto } from './dto/update-notification.dto';
 export class NotificationService {
   constructor(
     @InjectModel('Notification') private readonly notificationModel: Model<Notification>,
-    AccountService
   ) {}
 
   async createNotification(createNotificationDto: CreateNotificationDto): Promise<Notification> {
@@ -20,27 +18,17 @@ export class NotificationService {
 
   async createNotificationByPost(createNotificationDto: CreateNotificationDto): Promise<string> {
     // Tìm thông tin người nhận (receiver) để lấy danh sách bạn bè của họ
-    const receiver = await AccountService.accountModel.findById(createNotificationDto.receiver_id);
   
     // Nếu không tìm thấy người nhận, throw lỗi
-    if (!receiver) {
-      throw new Error('Receiver not found');
-    }
+
   
     // Giả sử mảng bạn bè của receiver là "friends" (mảng chứa các ObjectId của bạn bè)
-    const friendIds = receiver.friend;
+
   
     // Tạo một mảng các thông báo
-    const notifications = friendIds.map((friendId) => {
-      const notificationData = {
-        ...createNotificationDto,   // Sao chép thông tin từ dto (thông báo gốc)
-        receiver_id: friendId      // Thay đổi receiver_id thành ID bạn bè
-      };
-      return new this.notificationModel(notificationData);
-    });
+    
   
     // Lưu tất cả các thông báo vào cơ sở dữ liệu
-    const savedNotifications = await this.notificationModel.insertMany(notifications);
   
     // Trả về danh sách các thông báo đã được lưu
     return "OK";
@@ -49,10 +37,19 @@ export class NotificationService {
 
   async getAllNotificationsByUserId(userId: string): Promise<Notification[]> {
     return this.notificationModel
-        .find({ receiver_id: userId })  // Lọc thông báo theo receiver_id
-        .populate('link_user', 'username image') // Populate thông tin name và image từ bảng User
-        .exec(); // Thực thi truy vấn
+        .find({ receiver_id: userId }) // Lọc thông báo theo receiver_id
+        .sort({ created_time: -1 }) // Sắp xếp theo thứ tự giảm dần (mới nhất lên đầu)
+        .populate({
+            path: 'link_user', // Lấy dữ liệu từ trường link_user
+            select: 'username image', // Chỉ lấy các trường cần thiết
+        })
+        .populate({
+            path: 'link_comment', // Từ bảng Post, truy xuất đến bảng User qua user_id
+            select: 'username image', // Chỉ lấy username và image từ User
+        })
+        .exec(); 
 }
+
 
   async getNotificationById(id: string): Promise<Notification> {
     if (!Types.ObjectId.isValid(id)) {
@@ -80,6 +77,32 @@ export class NotificationService {
       throw new NotFoundException(`Notification with ID ${id} not found`);
     }
     return updatedNotification;
+  }
+
+  async updateIsNew(id: string, isNew: boolean): Promise<Notification> {
+    const notification = await this.notificationModel.findById(id).exec();
+
+    if (!notification) {
+      throw new NotFoundException(`Notification with ID ${id} not found`);
+    }
+
+    // Cập nhật trường is_new
+    notification.is_new = isNew;
+    await notification.save();
+    
+    return notification;
+  }
+
+  async markAllAsRead(userId: string, isNew: boolean): Promise<any> {
+    try {
+      const result = await this.notificationModel.updateMany(
+        { receiver_id: userId },
+        { $set: { is_new: isNew } },
+      );
+      return result;
+    } catch (error) {
+      throw new Error('Error updating notifications: ' + error.message);
+    }
   }
 
   async deleteNotification(id: string): Promise<{ message: string }> {
