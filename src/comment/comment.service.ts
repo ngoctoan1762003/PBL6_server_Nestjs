@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Comment } from './comment.schema';
 import { PostUser } from 'src/post/post.schema';
 import { CreateCommentDto } from './dto/comment.dto';
@@ -41,9 +41,60 @@ export class CommentService {
     return savedComment;
   }
 
-  async getAllCommentsByPostId(postId: string): Promise<Comment[]> {
-    return this.commentModel.find({ post_id: postId }).exec();
+  async getAllCommentsByPostId(postId: string): Promise<any[]> {
+    const comments = await this.commentModel.aggregate([
+      { $match: { post_id: new Types.ObjectId(postId) } }, // Filter by post_id
+      {
+        $lookup: {
+          from: 'users', // The collection name for users
+          localField: 'user_id', // Field in the Comment collection
+          foreignField: '_id', // Field in the User collection
+          as: 'userDetails', // Name of the output array
+        },
+      },
+      {
+        $unwind: { path: '$userDetails', preserveNullAndEmptyArrays: true }, // Flatten userDetails array
+      },
+      {
+        $project: {
+          _id: 1,
+          content: 1,
+          post_id: 1,
+          parent_comment_id: 1,
+          created_time: 1,
+          user: {
+            _id: '$userDetails._id',
+            username: '$userDetails.username',
+            image: '$userDetails.image',
+          },
+        },
+      },
+    ]);
+
+    // Create a map to store comments by their ID
+    const commentMap: Record<string, any> = {};
+    comments.forEach(comment => {
+      comment.child = []; // Initialize child array
+      commentMap[comment._id.toString()] = comment;
+    });
+
+    // Create the nested structure
+    const topLevelComments = [];
+    comments.forEach(comment => {
+      if (comment.parent_comment_id) {
+        const parentComment = commentMap[comment.parent_comment_id.toString()];
+        if (parentComment) {
+          parentComment.child.push(comment); // Add as a child of its parent
+        }
+      } else {
+        topLevelComments.push(comment); // It's a top-level comment
+      }
+    });
+
+    return topLevelComments;
   }
+
+
 
   async getCommentById(id: string): Promise<Comment> {
     const comment = await this.commentModel.findById(id).exec();

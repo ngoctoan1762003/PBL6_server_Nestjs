@@ -11,6 +11,7 @@ import { AccountService } from 'src/account/account.service';
 import { User } from 'src/account/account.schema';
 import { ReportPost } from './reportpost.schema';
 import { CreateReportPostDto } from './dto/create-report-post.dto';
+import { CommentService } from 'src/comment/comment.service';
 
 @Injectable()
 export class PostService {
@@ -19,8 +20,10 @@ export class PostService {
         @InjectModel(ReportPost.name) private reportPostModel: Model<ReportPost>,
         @InjectModel(Comment.name) private commentModel: Model<Comment>,
         @InjectModel('UserPostShare') private readonly userPostShareModel: Model<UserPostShare>,
-        private accountService: AccountService,  // Inject AccountService
+        private accountService: AccountService,
+        private commentService: CommentService // Inject CommentService
     ) { }
+
 
     async createPost(createPostDto: CreatePostDto): Promise<PostUser> {
         createPostDto.status = "Pending"
@@ -38,6 +41,9 @@ export class PostService {
             const userInfo = await this.accountService.getUserById(post.user_id.toString());
             const likeUsers = await this.getUsersByIds(likeUserIds);
             const dislikeUsers = await this.getUsersByIds(dislikeUserIds);
+
+            // Fetch comments for the post
+            const comments = await this.commentService.getAllCommentsByPostId(post._id.toString());
 
             return {
                 ...post.toObject(),
@@ -58,6 +64,7 @@ export class PostService {
                     username: user.username,
                     image: user.image,
                 })),
+                comments, // Include the comments
             };
         }));
 
@@ -65,14 +72,22 @@ export class PostService {
         return allPosts;
     }
 
+
     async getPostById(postId: string): Promise<any> {
         const post = await this.postModel.findById(postId).exec();
+        if (!post) {
+            throw new NotFoundException('Post not found');
+        }
+
         const likeUserIds = post.like_user_id.map(id => id.toString());
         const dislikeUserIds = post.dislike_user_id.map(id => id.toString());
 
         const userInfo = await this.accountService.getUserById(post.user_id.toString());
         const likeUsers = await this.getUsersByIds(likeUserIds);
         const dislikeUsers = await this.getUsersByIds(dislikeUserIds);
+
+        // Fetch comments for the post
+        const comments = await this.commentService.getAllCommentsByPostId(post._id.toString());
 
         return {
             ...post.toObject(),
@@ -81,7 +96,7 @@ export class PostService {
                 email: userInfo.email,
                 role: userInfo.role,
                 status: userInfo.status,
-                image: userInfo.image
+                image: userInfo.image,
             },
             like_user_info: likeUsers.map(user => ({
                 _id: user._id,
@@ -93,6 +108,7 @@ export class PostService {
                 username: user.username,
                 image: user.image,
             })),
+            comments, // Include the comments
         };
     }
 
@@ -100,11 +116,10 @@ export class PostService {
         if (!Types.ObjectId.isValid(userId)) {
             throw new Error('Invalid User ID format');
         }
-    
+
         const userPosts = await this.postModel.find({ user_id: userId }).exec();
-    
         const sharedPostShares = await this.userPostShareModel.find({ user_id: userId }).exec();
-    
+
         const sharedPosts = await Promise.all(
             sharedPostShares.map(async (share) => {
                 const post = await this.postModel.findById(share.post_id).exec();
@@ -114,10 +129,10 @@ export class PostService {
                 return null; // Return null if post is not found
             }),
         );
-    
+
         // Filter out any null values in sharedPosts
         const validSharedPosts = sharedPosts.filter((post) => post !== null);
-    
+
         const allPosts = [
             ...userPosts.map((post) => ({
                 user_id: post.user_id,
@@ -128,7 +143,7 @@ export class PostService {
                 tag: post.tag,
                 group_id: post.group_id,
                 created_time: post.created_time,
-                _id: post._id
+                _id: post._id,
             })),
             ...validSharedPosts.map((post) => ({
                 user_id: post.user_id,
@@ -139,44 +154,52 @@ export class PostService {
                 tag: post.tag,
                 group_id: post.group_id,
                 created_time: post.shared_time,
-                _id: post._id
-            }))
+                _id: post._id,
+            })),
         ];
-    
+
         allPosts.sort((a, b) => new Date(b.created_time).getTime() - new Date(a.created_time).getTime());
-    
-        const result = await Promise.all(allPosts.map(async (post) => {
-            const likeUserIds = post.like_user_id.map(id => id.toString());
-            const dislikeUserIds = post.dislike_user_id.map(id => id.toString());
-    
-            const userInfo = await this.accountService.getUserById(post.user_id.toString());
-            const likeUsers = await this.getUsersByIds(likeUserIds);
-            const dislikeUsers = await this.getUsersByIds(dislikeUserIds);
-    
-            return {
-                ...post, // No need to call post.toObject() here, as `post` is already a plain object
-                userInfo: {
-                    username: userInfo.username,
-                    email: userInfo.email,
-                    role: userInfo.role,
-                    status: userInfo.status
-                },
-                like_user_info: likeUsers.map(user => ({
-                    _id: user._id,
-                    username: user.username,
-                    image: user.image,
-                })),
-                dislike_user_info: dislikeUsers.map(user => ({
-                    _id: user._id,
-                    username: user.username,
-                    image: user.image,
-                })),
-            };
-        }));
-    
+
+        // Fetch additional details for each post
+        const result = await Promise.all(
+            allPosts.map(async (post) => {
+                const likeUserIds = post.like_user_id.map((id) => id.toString());
+                const dislikeUserIds = post.dislike_user_id.map((id) => id.toString());
+
+                const userInfo = await this.accountService.getUserById(post.user_id.toString());
+                const likeUsers = await this.getUsersByIds(likeUserIds);
+                const dislikeUsers = await this.getUsersByIds(dislikeUserIds);
+
+                // Fetch comments for the post
+                const comments = await this.commentService.getAllCommentsByPostId(post._id.toString());
+
+                return {
+                    ...post,
+                    userInfo: {
+                        username: userInfo.username,
+                        email: userInfo.email,
+                        role: userInfo.role,
+                        status: userInfo.status,
+                    },
+                    like_user_info: likeUsers.map((user) => ({
+                        _id: user._id,
+                        username: user.username,
+                        image: user.image,
+                    })),
+                    dislike_user_info: dislikeUsers.map((user) => ({
+                        _id: user._id,
+                        username: user.username,
+                        image: user.image,
+                    })),
+                    comments, // Include the comments
+                };
+            }),
+        );
+
         return result;
     }
-    
+
+
 
     private async getUsersByIds(userIds: string[]): Promise<User[]> {
         return this.accountService.findByIds(userIds);
@@ -348,21 +371,21 @@ export class PostService {
 
     async reportPost(reportPostDto: CreateReportPostDto): Promise<ReportPost> {
         const { post_id, user_id } = reportPostDto;
-    
+
         const existingReport = await this.reportPostModel.findOne({ post_id, user_id }).exec();
         if (existingReport) {
             throw new Error('You have already reported this post.');
         }
-    
+
         const report = new this.reportPostModel(reportPostDto);
         return report.save();
-    }    
+    }
 
-    async getReportPost(): Promise<{ 
-        post_id: string; 
-        report_count: number; 
-        reports: any[]; 
-        post_owner: { user_id: string; username: string; email: string } | null; 
+    async getReportPost(): Promise<{
+        post_id: string;
+        report_count: number;
+        reports: any[];
+        post_owner: { user_id: string; username: string; email: string } | null;
     }[]> {
         const reports = await this.reportPostModel.aggregate([
             // Group reports by post_id
@@ -428,17 +451,17 @@ export class PostService {
                 },
             },
         ]).exec();
-    
+
         return reports;
     }
-    
+
     async deleteReportsByPostId(postId: string): Promise<{ message: string; deletedCount: number }> {
         if (!Types.ObjectId.isValid(postId)) {
             throw new Error('Invalid Post ID format');
         }
-    
+
         const result = await this.reportPostModel.deleteMany({ post_id: postId }).exec();
-    
+
         return {
             message: 'Reports deleted successfully',
             deletedCount: result.deletedCount || 0,
@@ -446,5 +469,5 @@ export class PostService {
     }
 
 
-    
+
 }

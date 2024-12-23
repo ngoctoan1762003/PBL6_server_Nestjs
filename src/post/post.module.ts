@@ -10,10 +10,11 @@ import { Comment, CommentSchema } from 'src/comment/comment.schema';
 import { User, UserSchema } from 'src/account/account.schema';
 import { JwtService } from '@nestjs/jwt';
 import { ReportPost, ReportPostSchema } from './reportpost.schema';
+import { CommentService } from 'src/comment/comment.service';
 
 @Module({
     imports: [MongooseModule.forFeature([{ name: PostUser.name, schema: PostSchema }, {name: "UserPostShare", schema: UserPostShareSchema}, {name: Comment.name, schema: CommentSchema}, {name: User.name, schema: UserSchema}, {name: ReportPost.name, schema: ReportPostSchema}])],
-    providers: [PostService, AccountService, JwtService],
+    providers: [PostService, AccountService, JwtService, CommentService],
     controllers: [PostController],
 })
 export class PostModule {}
