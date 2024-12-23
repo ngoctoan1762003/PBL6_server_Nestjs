@@ -12,7 +12,7 @@ export class AccountController {
     constructor(private accountService: AccountService) { }
 
     @Get()
-    @UseGuards(AdminAuthGuard)
+    // @UseGuards(AdminAuthGuard)
     async getAllAccount(): Promise<User[]> {
         return this.accountService.findAll();
     }

@@ -180,6 +180,7 @@ export class PostService {
                         email: userInfo.email,
                         role: userInfo.role,
                         status: userInfo.status,
+                        image: userInfo.image
                     },
                     like_user_info: likeUsers.map((user) => ({
                         _id: user._id,
@@ -221,7 +222,12 @@ export class PostService {
         return updatedPost;
     }
 
-    async deletePost(postId: string): Promise<{ message: string }> {
+    async deletePost(postId: string): Promise<{ message: string; deletedReportCount: number }> {
+        // Validate the post ID
+        if (!Types.ObjectId.isValid(postId)) {
+            throw new Error('Invalid Post ID format');
+        }
+
         // Check if the post exists
         const post = await this.postModel.findById(postId).exec();
         if (!post) {
@@ -234,14 +240,21 @@ export class PostService {
         // Delete all user_post_shares associated with the post
         await this.userPostShareModel.deleteMany({ post_id: postId }).exec();
 
-        const result = await this.postModel.findByIdAndDelete(postId).exec();
+        // Delete all reports associated with the post
+        const reportDeleteResult = await this.reportPostModel.deleteMany({ post_id: postId }).exec();
 
+        // Delete the post itself
+        const result = await this.postModel.findByIdAndDelete(postId).exec();
         if (!result) {
             throw new NotFoundException('Post not found');
         }
 
-        return { message: 'Post and related data deleted successfully' };
+        return {
+            message: 'Post, related reports, and associated data deleted successfully',
+            deletedReportCount: reportDeleteResult.deletedCount || 0,
+        };
     }
+
 
 
     async likePost(postId: string, userId: string): Promise<PostUser> {
@@ -369,17 +382,19 @@ export class PostService {
         return posts;
     }
 
-    async reportPost(reportPostDto: CreateReportPostDto): Promise<ReportPost> {
+    async reportPost(reportPostDto: CreateReportPostDto): Promise<{ message: string; report?: ReportPost }> {
         const { post_id, user_id } = reportPostDto;
 
         const existingReport = await this.reportPostModel.findOne({ post_id, user_id }).exec();
         if (existingReport) {
-            throw new Error('You have already reported this post.');
+            return { message: 'You have already reported this post.' };
         }
 
         const report = new this.reportPostModel(reportPostDto);
-        return report.save();
+        const savedReport = await report.save();
+        return { message: 'Report submitted successfully.', report: savedReport };
     }
+
 
     async getReportPost(): Promise<{
         post_id: string;
