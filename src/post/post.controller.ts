@@ -17,7 +17,7 @@ export class PostController {
     }
 
     @Post('/report')
-    async report(@Body() reportPost: CreateReportPostDto): Promise<ReportPost> {
+    async report(@Body() reportPost: CreateReportPostDto): Promise<{ message: string; report?: ReportPost }> {
         return this.postService.reportPost(reportPost);
     }
 
