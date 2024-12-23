@@ -80,7 +80,8 @@ export class PostService {
                 username: userInfo.username,
                 email: userInfo.email,
                 role: userInfo.role,
-                status: userInfo.status
+                status: userInfo.status,
+                image: userInfo.image
             },
             like_user_info: likeUsers.map(user => ({
                 _id: user._id,
@@ -444,6 +445,6 @@ export class PostService {
         };
     }
 
-    
+
     
 }

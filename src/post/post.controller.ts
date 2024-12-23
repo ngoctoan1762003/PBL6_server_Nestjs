@@ -86,9 +86,9 @@ export class PostController {
         return this.postService.FindPostByTag(tag);
     }
 
-    @Post('edit')
-    async search(@Body('tag') tag: string): Promise<PostUser[]> {
-        return this.postService.FindPostByTag(tag);
-    }
+    // @Post('edit')
+    // async search(@Body('tag') tag: string): Promise<PostUser[]> {
+    //     return this.postService.FindPostByTag(tag);
+    // }
 
 }
