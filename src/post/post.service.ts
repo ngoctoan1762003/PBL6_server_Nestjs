@@ -73,44 +73,59 @@ export class PostService {
     }
 
 
-    async getPostById(postId: string): Promise<any> {
+    async getPostById(postId: string): Promise<any[]> {
         const post = await this.postModel.findById(postId).exec();
         if (!post) {
             throw new NotFoundException('Post not found');
         }
-
-        const likeUserIds = post.like_user_id.map(id => id.toString());
-        const dislikeUserIds = post.dislike_user_id.map(id => id.toString());
-
+    
+        // Chuyển đổi like_user_id và dislike_user_id thành mảng string
+        const likeUserIds = post.like_user_id?.map((id: any) => id.toString()) || [];
+        const dislikeUserIds = post.dislike_user_id?.map((id: any) => id.toString()) || [];
+    
+        // Lấy thông tin người dùng từ user_id
         const userInfo = await this.accountService.getUserById(post.user_id.toString());
-        const likeUsers = await this.getUsersByIds(likeUserIds);
-        const dislikeUsers = await this.getUsersByIds(dislikeUserIds);
-
-        // Fetch comments for the post
+    
+        // Lấy thông tin người dùng đã like và dislike
+        const likeUsers = likeUserIds.length > 0 ? await this.getUsersByIds(likeUserIds) : [];
+        const dislikeUsers = dislikeUserIds.length > 0 ? await this.getUsersByIds(dislikeUserIds) : [];
+    
+        // Lấy danh sách bình luận của bài viết
         const comments = await this.commentService.getAllCommentsByPostId(post._id.toString());
-
-        return {
-            ...post.toObject(),
-            userInfo: {
-                username: userInfo.username,
-                email: userInfo.email,
-                role: userInfo.role,
-                status: userInfo.status,
-                image: userInfo.image,
-            },
-            like_user_info: likeUsers.map(user => ({
-                _id: user._id,
-                username: user.username,
-                image: user.image,
-            })),
-            dislike_user_info: dislikeUsers.map(user => ({
-                _id: user._id,
-                username: user.username,
-                image: user.image,
-            })),
-            comments, // Include the comments
-        };
+    
+        // Trả về mảng kết quả
+        return [
+            {
+                _id: post._id.toString(),
+                content: post.content,
+                created_time: post.created_time,
+                tag: post.tag || [],
+                photo: post.photo || [],
+                like_user_id: likeUserIds,
+                dislike_user_id: dislikeUserIds,
+                comments: comments || [],
+                user_id: post.user_id,
+                userInfo: {
+                    username: userInfo.username,
+                    email: userInfo.email,
+                    role: userInfo.role,
+                    status: userInfo.status,
+                    image: userInfo.image,
+                },
+                like_user_info: likeUsers.map(user => ({
+                    _id: user._id.toString(),
+                    username: user.username,
+                    image: user.image,
+                })),
+                dislike_user_info: dislikeUsers.map(user => ({
+                    _id: user._id.toString(),
+                    username: user.username,
+                    image: user.image,
+                })),
+            }
+        ];
     }
+    
 
     async getAllPostAndShareByUserId(userId: string): Promise<any[]> {
         if (!Types.ObjectId.isValid(userId)) {
@@ -377,10 +392,55 @@ export class PostService {
         return post.save();
     }
 
-    async FindPostByTag(tag: string): Promise<PostUser[]> {
+    async FindPostByTag(tag: string): Promise<any[]> {
+        // Tìm các bài viết có tag tương ứng
         const posts = await this.postModel.find({ tag: tag }).exec();
-        return posts;
+    
+        // Nếu không có bài viết nào, trả về mảng rỗng
+        if (!posts || posts.length === 0) {
+            return [];
+        }
+    
+        // Lấy thông tin chi tiết cho từng bài viết
+        const detailedPosts = await Promise.all(
+            posts.map(async (post) => {
+                const likeUserIds = post.like_user_id.map(id => id.toString());
+                const dislikeUserIds = post.dislike_user_id.map(id => id.toString());
+    
+                const userInfo = await this.accountService.getUserById(post.user_id.toString());
+                const likeUsers = await this.getUsersByIds(likeUserIds);
+                const dislikeUsers = await this.getUsersByIds(dislikeUserIds);
+    
+                // Fetch comments for the post
+                const comments = await this.commentService.getAllCommentsByPostId(post._id.toString());
+    
+                return {
+                    ...post.toObject(),
+                    userInfo: {
+                        username: userInfo.username,
+                        email: userInfo.email,
+                        role: userInfo.role,
+                        status: userInfo.status,
+                        image: userInfo.image,
+                    },
+                    like_user_info: likeUsers.map(user => ({
+                        _id: user._id,
+                        username: user.username,
+                        image: user.image,
+                    })),
+                    dislike_user_info: dislikeUsers.map(user => ({
+                        _id: user._id,
+                        username: user.username,
+                        image: user.image,
+                    })),
+                    comments, // Include the comments
+                };
+            })
+        );
+    
+        return detailedPosts;
     }
+    
 
     async reportPost(reportPostDto: CreateReportPostDto): Promise<{ message: string; report?: ReportPost }> {
         const { post_id, user_id } = reportPostDto;
