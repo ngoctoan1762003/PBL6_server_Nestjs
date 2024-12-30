@@ -26,6 +26,11 @@ export class PostController {
         return this.postService.getAllPosts();
     }
 
+    @Get('/share/:id')
+    async getSharedPost(@Param('id') userId: string): Promise<any[]>{
+        return this.postService.getAllPostShared(userId);
+    }
+
     @Get('/report')
     async getAllReportedPosts(): Promise<{ post_id: string; report_count: number }[]> {
         return this.postService.getReportPost();

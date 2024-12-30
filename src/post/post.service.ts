@@ -112,6 +112,26 @@ export class PostService {
         };
     }
 
+    async getAllPostShared(userId: string): Promise<any[]> {
+        if (!Types.ObjectId.isValid(userId)) {
+            throw new Error('Invalid User ID format');
+        }
+
+        const sharedPostShares = await this.userPostShareModel.find({ user_id: userId }).exec();
+
+        const sharedPosts = await Promise.all(
+            sharedPostShares.map(async (share) => {
+                const post = await this.postModel.findById(share.post_id).exec();
+                if (post) {
+                    return { ...post.toObject(), shared_time: share.shared_time, time: share.shared_time };
+                }
+                return null; // Return null if post is not found
+            }),
+        );
+
+        return sharedPosts;
+    }
+
     async getAllPostAndShareByUserId(userId: string): Promise<any[]> {
         if (!Types.ObjectId.isValid(userId)) {
             throw new Error('Invalid User ID format');
