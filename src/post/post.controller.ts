@@ -37,7 +37,7 @@ export class PostController {
     }
 
     @Get(':id')
-    async getPostById(@Param('id') postId: string) {
+    async getPostById(@Param('id') postId: string): Promise<any[]> {
         return this.postService.getPostById(postId);
     }
 
@@ -87,7 +87,7 @@ export class PostController {
     }
 
     @Post('search')
-    async search(@Body('tag') tag: string): Promise<PostUser[]> {
+    async search(@Body('tag') tag: string): Promise<any[]> {
         return this.postService.FindPostByTag(tag);
     }
 

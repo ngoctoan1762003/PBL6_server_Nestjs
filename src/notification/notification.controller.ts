@@ -38,6 +38,24 @@ export class NotificationController {
     return this.notificationService.updateNotification(id, updateNotificationDto);
   }
 
+  @Put(':id/is_new')
+  async updateIsNew(
+    @Param('id') id: string,
+    @Body() body: { is_new: boolean },
+  ) {
+    const { is_new } = body;
+    return this.notificationService.updateIsNew(id, is_new);
+  }
+
+  @Put('mark-all-as-read/:userId/:isNew')
+  async markAllNotificationsAsRead(
+    @Param('userId') userId: string,
+    @Param('isNew') isNew: string,
+  ) {
+    const isNewBoolean = isNew === 'true';
+    return await this.notificationService.markAllAsRead(userId, isNewBoolean);
+  }
+
   @Delete(':id')
   async deleteNotification(@Param('id') id: string) {
     return this.notificationService.deleteNotification(id);

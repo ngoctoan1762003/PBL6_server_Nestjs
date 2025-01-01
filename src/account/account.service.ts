@@ -12,7 +12,6 @@ import * as nodemailer from 'nodemailer'; // For sending emails
  
 @Injectable()
 export class AccountService {
-    static accountModel: any;
     constructor(
         @InjectModel(User.name)
         public accountModel: mongoose.Model<User>,

@@ -111,6 +111,7 @@ export class PostService {
             comments, // Include the comments
         };
     }
+    
 
     async getAllPostShared(userId: string): Promise<any[]> {
         if (!Types.ObjectId.isValid(userId)) {
@@ -397,10 +398,55 @@ export class PostService {
         return post.save();
     }
 
-    async FindPostByTag(tag: string): Promise<PostUser[]> {
+    async FindPostByTag(tag: string): Promise<any[]> {
+        // Tìm các bài viết có tag tương ứng
         const posts = await this.postModel.find({ tag: tag }).exec();
-        return posts;
+    
+        // Nếu không có bài viết nào, trả về mảng rỗng
+        if (!posts || posts.length === 0) {
+            return [];
+        }
+    
+        // Lấy thông tin chi tiết cho từng bài viết
+        const detailedPosts = await Promise.all(
+            posts.map(async (post) => {
+                const likeUserIds = post.like_user_id.map(id => id.toString());
+                const dislikeUserIds = post.dislike_user_id.map(id => id.toString());
+    
+                const userInfo = await this.accountService.getUserById(post.user_id.toString());
+                const likeUsers = await this.getUsersByIds(likeUserIds);
+                const dislikeUsers = await this.getUsersByIds(dislikeUserIds);
+    
+                // Fetch comments for the post
+                const comments = await this.commentService.getAllCommentsByPostId(post._id.toString());
+    
+                return {
+                    ...post.toObject(),
+                    userInfo: {
+                        username: userInfo.username,
+                        email: userInfo.email,
+                        role: userInfo.role,
+                        status: userInfo.status,
+                        image: userInfo.image,
+                    },
+                    like_user_info: likeUsers.map(user => ({
+                        _id: user._id,
+                        username: user.username,
+                        image: user.image,
+                    })),
+                    dislike_user_info: dislikeUsers.map(user => ({
+                        _id: user._id,
+                        username: user.username,
+                        image: user.image,
+                    })),
+                    comments, // Include the comments
+                };
+            })
+        );
+    
+        return detailedPosts;
     }
+    
 
     async reportPost(reportPostDto: CreateReportPostDto): Promise<{ message: string; report?: ReportPost }> {
         const { post_id, user_id } = reportPostDto;
